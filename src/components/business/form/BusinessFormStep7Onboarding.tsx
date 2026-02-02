@@ -221,7 +221,7 @@ export function BusinessFormStep7Onboarding({ businessData, isMini, onPrevious, 
       setManualHivePostLink(postLink);
 
       if (isOnboardingOnly) {
-        await updateBusiness(updatedBusiness);
+        await updateBusiness(updatedBusiness, true);
         toast.success("Onboarding post published and business updated");
         onCompleted();
       } else {
@@ -267,7 +267,7 @@ export function BusinessFormStep7Onboarding({ businessData, isMini, onPrevious, 
       };
 
       if (isOnboardingOnly) {
-        await updateBusiness(updatedBusiness);
+        await updateBusiness(updatedBusiness, true);
         toast.success("Hive post link saved to business");
         onCompleted();
       } else {

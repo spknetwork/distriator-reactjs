@@ -35,7 +35,7 @@ interface BusinessesState {
   getEnhancedSpendHistory: (accountName: string, filterDays: number) => Promise<SpendHistoryItem[]>;
   deleteBusiness: (businessId: string, token: string) => Promise<void>;
   createBusiness: (businessData: BusinessModel, token: string, isMini?: boolean) => Promise<void>;
-  updateBusiness: (businessData: BusinessModel, token: string) => Promise<void>;
+  updateBusiness: (businessData: BusinessModel, token: string, isOnboardingOnly?: boolean) => Promise<void>;
   
   // Internal helpers
   setBusinesses: (businesses: BusinessModel[]) => void;
@@ -283,14 +283,20 @@ export const useBusinessesStore = create<BusinessesState>((set, get) => ({
     }
   },
 
-  updateBusiness: async (businessData: BusinessModel, token: string) => {
+  updateBusiness: async (businessData: BusinessModel, token: string, isOnboardingOnly = false) => {
     set({ viewState: ViewState.LOADING });
     try {
       if (!token) {
         throw new Error("Authentication required");
       }
 
-      const updatedBusiness = await updateBusinessApi(businessData, token);
+      // Prepare payload; remove `unverified_claims` from distriator when onboarding-only update
+      const payload: any = JSON.parse(JSON.stringify(businessData));
+      if (isOnboardingOnly && payload?.distriator && Object.prototype.hasOwnProperty.call(payload.distriator, 'unverified_claims')) {
+        delete payload.distriator.unverified_claims;
+      }
+
+      const updatedBusiness = await updateBusinessApi(payload, token);
 
       // Update local state
       const { businesses } = get();
