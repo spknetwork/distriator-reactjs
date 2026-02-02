@@ -4,6 +4,8 @@ import { type BusinessRatingModel } from '../../types/business-rating';
 import { ViewState } from '../../types/enums';
 import { Skeleton } from '@radix-ui/themes';
 import { useNavigate } from 'react-router-dom';
+import { ThreeDotMenu } from '../ThreeDotMenu';
+import { useAuthContext } from '../../context/AuthContext';
 
 interface BusinessRatingsProps {
     ratings: BusinessRatingModel[];
@@ -13,6 +15,7 @@ interface BusinessRatingsProps {
 
 export function BusinessRatings({ ratings, viewState, businessName }: BusinessRatingsProps) {
     const navigate = useNavigate();
+    const { currentUser } = useAuthContext();
 
     const getPeakdRatingUrl = (author: string, permlink: string) => {
         const cleanAuthor = (author || '').replace(/^@/, '').trim();
@@ -71,6 +74,11 @@ export function BusinessRatings({ ratings, viewState, businessName }: BusinessRa
                         const peakdUrl = getPeakdRatingUrl(rating.ratingAuthor, rating.ratingPermlink);
                         const card = (
                             <div className="w-80 h-40 flex-shrink-0 rounded-lg overflow-hidden relative bg-muted p-4 flex flex-col justify-between">
+                                {currentUser && (
+                                    <div className="absolute top-2 right-2" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
+                                        <ThreeDotMenu />
+                                    </div>
+                                )}
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <img
@@ -111,7 +119,7 @@ export function BusinessRatings({ ratings, viewState, businessName }: BusinessRa
                                 href={peakdUrl}
                                 target="_blank"
                                 rel="noopener noreferrer"
-                                className="block cursor-pointer rounded-lg focus:outline-none focus:ring-2 focus:ring-primary focus:ring-offset-2 focus:ring-offset-background"
+                                className="block cursor-pointer rounded-lg"
                                 aria-label={`Open rating on PeakD by @${rating.ratingAuthor}`}
                             >
                                 {card}
