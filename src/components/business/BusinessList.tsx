@@ -674,7 +674,7 @@ export default function BusinessList() {
                 </span>
                 {biz.id && (() => {
                   const unverifiedCount = getUnverifiedClaimsCount(biz.id);
-                  if (unverifiedCount > 0) {
+                  if (unverifiedCount > 0 && !biz.distriator.verification?.hivePost) {
                     return (
                       <span className="text-sm text-yellow-400 mt-1">
                         Only {unverifiedCount} unverified claims left.
