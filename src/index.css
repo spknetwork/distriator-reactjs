@@ -1,0 +1,187 @@
+@import "tailwindcss";
+@plugin "daisyui";
+@import "hive-authentication/build.css";
+@import "@radix-ui/themes/styles.css";
+
+@layer base {
+  :root {
+    --background: 144 20% 8%; /* Very dark green background */
+    --foreground: 0 0% 95%; /* Light gray text */
+
+    --custom-background: 144 20% 8%; /* Dark green background */
+    --custom-foreground: 0 0% 95%; /* Light text */
+
+    --card: 144 15% 12%; /* Slightly lighter dark green for cards */
+    --card-foreground: 0 0% 95%;
+
+    --popover: 144 15% 12%;
+    --popover-foreground: 0 0% 95%;
+
+    --primary: 142 76% 45%; /* Bright green for buttons */
+    --primary-foreground: 0 0% 100%;
+
+    --secondary: 144 15% 15%; /* Dark green secondary */
+    --secondary-foreground: 0 0% 90%;
+
+    --muted: 144 10% 18%; /* Muted dark green */
+    --muted-foreground: 0 0% 70%;
+
+    --accent: 144 15% 20%; /* Accent dark green */
+    --accent-foreground: 0 0% 95%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 0 0% 100%;
+
+    --border: 144 15% 25%; /* Green border */
+    --input: 144 15% 15%; /* Dark green input */
+    --ring: 142 76% 45%; /* Green focus ring */
+
+    --success: 142 76% 45%; /* Bright green */
+    --success-foreground: 0 0% 100%;
+
+    --claim-card: 144 15% 15%; /* Dark green claim cards */
+    --claim-amount: 142 76% 55%; /* Bright green for amounts */
+    --claim-timer: 48 96% 53%; /* Keep yellow for timer */
+    
+    --gradient-primary: linear-gradient(135deg, hsl(142 76% 45%), hsl(142 76% 55%));
+    --gradient-success: linear-gradient(135deg, hsl(142 76% 45%), hsl(120 60% 50%));
+    --gradient-card: linear-gradient(135deg, hsl(144 15% 12%), hsl(144 15% 18%));
+    
+    --shadow-glow: 0 0 40px hsl(142 76% 45% / 0.4);
+    --shadow-card: 0 10px 30px -10px hsl(144 15% 8% / 0.9);
+  }
+
+
+  .dark {
+    --background: 144 20% 8%;
+    --foreground: 0 0% 95%;
+    --card: 144 15% 12%;
+    --card-foreground: 0 0% 95%;
+    --popover: 144 15% 12%;
+    --popover-foreground: 0 0% 95%;
+    --primary: 142 76% 45%;
+    --primary-foreground: 0 0% 100%;
+    --secondary: 144 15% 15%;
+    --secondary-foreground: 0 0% 90%;
+    --muted: 144 10% 18%;
+    --muted-foreground: 0 0% 70%;
+    --accent: 144 15% 20%;
+    --accent-foreground: 0 0% 95%;
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 0 85.7% 97.3%;
+    --border: 144 15% 25%;
+    --input: 144 15% 15%;
+    --ring: 142 76% 45%;
+  }
+
+
+  * {
+    border-color: hsl(var(--border));
+  }
+}
+@layer components {
+  .claim-card {
+    background-image: linear-gradient(to bottom right, hsl(var(--claim-card)), hsl(var(--accent)));
+    border: 1px solid hsl(var(--border));
+    box-shadow: var(--shadow-card);
+    color: hsl(var(--card-foreground)); /* Add text color */
+  }
+  
+  .bg-gradient-to-r{
+    background-image: var(--gradient-primary);
+    color: hsl(var(--foreground)); /* Add text color */
+  }
+
+  .claim-button {
+    background-image: linear-gradient(to right, hsl(var(--primary)), hsl(var(--success)));
+    box-shadow: var(--shadow-glow);
+    transform: scale(1);
+    transition: all 0.3s ease-out;
+    border: none;
+    color: hsl(var(--primary-foreground)) !important; /* Make it important */
+    font-weight: bold;
+  }
+
+  .claim-button:hover {
+    transform: scale(1.05);
+    color: hsl(var(--primary-foreground)) !important; /* Ensure hover keeps white text */
+  }
+
+  .amount-text {
+    color: hsl(var(--claim-amount)) !important; /* Make it important */
+    font-weight: bold;
+    font-size: 2.25rem;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  }
+
+  .timer-text {
+    color: hsl(var(--claim-timer)) !important; /* Make it important */
+    font-weight: 600;
+    text-shadow: 0 1px 1px rgba(0, 0, 0, 0.1);
+  }
+
+  .transaction-card {
+    background-image: linear-gradient(to right, hsl(var(--card)), hsl(var(--accent)));
+    border: 1px solid hsl(var(--border));
+    border-radius: 0.5rem;
+    transition: all 0.2s ease-in-out;
+    color: hsl(var(--card-foreground)); /* Add text color */
+  }
+
+  .transaction-card:hover {
+    box-shadow: 0 10px 15px -3px rgba(0,0,0,0.1), 0 4px 6px -4px rgba(0,0,0,0.1);
+    transform: scale(1.02);
+    color: hsl(var(--card-foreground)); /* Maintain text color on hover */
+  }
+}
+
+.aioha-modal h2:nth-of-type(1) {
+  color: hsl(var(--muted-foreground)) !important; /* Use CSS variable instead of fixed color */
+}
+
+/* Add additional aioha modal dark mode support */
+.aioha-modal {
+  background-color: hsl(var(--card)) !important;
+  color: hsl(var(--card-foreground)) !important;
+}
+
+.aioha-modal * {
+  color: hsl(var(--card-foreground)) !important;
+}
+
+@layer utilities {
+  /* Override .bg-background */
+  .bg-background {
+    background-color: hsl(var(--custom-background, var(--background))) !important;
+    color: hsl(var(--custom-foreground, var(--foreground))) !important; /* Add text color */
+  }
+
+  .text-foreground {
+    color: hsl(var(--custom-foreground, var(--foreground))) !important;
+  }
+  
+  /* Ensure all text elements have proper color in dark mode */
+  .dark * {
+    color: hsl(var(--foreground));
+  }
+  
+  /* Override for specific elements that should keep their custom colors */
+  .dark .amount-text {
+    color: hsl(var(--claim-amount)) !important;
+  }
+  
+  .dark .timer-text {
+    color: hsl(var(--claim-timer)) !important;
+  }
+  
+  .dark .claim-button {
+    color: hsl(var(--primary-foreground)) !important;
+  }
+
+  /* Safe area insets for mobile apps (Capacitor) */
+  /* Base padding for status bar + safe area inset for notches */
+  .pt-safe-top {
+    padding-top: env(safe-area-inset-top, 0px) !important;
+    background-color: hsl(var(--background)) !important;
+  }
+}
