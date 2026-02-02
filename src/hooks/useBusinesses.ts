@@ -63,8 +63,8 @@ export const useBusinesses = () => {
       await store.createBusiness(businessData, token, isMini);
       await refreshBusinesses();
     },
-    updateBusiness: async (businessData: any) => {
-      await store.updateBusiness(businessData, token);
+    updateBusiness: async (businessData: any, isOnboardingOnly?: boolean) => {
+      await store.updateBusiness(businessData, token, isOnboardingOnly);
       await refreshBusinesses();
     },
   };
