@@ -1,18 +1,28 @@
 // src/pages/BusinessReviewsPage.tsx
+import { useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft } from "lucide-react";
 import { useBusinessReviews } from "../hooks/useBusinessReviews";
 import { useBusinesses } from "../hooks/useBusinesses";
 import { BusinessReviews } from "../components/business/BusinessReviews";
 import { useAuthData } from '../utils/auth-utils';
+import { useReportedContentStore } from "../stores/reportedContentStore";
 
 const BusinessReviewsPage = () => {
   const { businessName } = useParams<{ businessName: string }>();
   const navigate = useNavigate();
   const { businesses } = useBusinesses();
+  const { fetchReportedContent } = useReportedContentStore();
+  const { token, isAuthenticated } = useAuthData();
 
   const business = businesses.find((b) => b.profile.displayName === businessName);
-  const {type, username} = useAuthData();
+  const { type, username } = useAuthData();
+
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      fetchReportedContent(token);
+    }
+  }, [isAuthenticated, token, fetchReportedContent]);
 
   const { reviews, viewState, hasHideUnhidePermission, updateReviewStatus, updatingReviews } = useBusinessReviews(
     business,

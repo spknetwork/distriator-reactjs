@@ -131,7 +131,7 @@ export function BusinessReviews({
               )}
               {currentUser && (
                 <div onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
-                  <ThreeDotMenu />
+                  <ThreeDotMenu username={review.username} permlink={review.permlink} />
                 </div>
               )}
             </div>

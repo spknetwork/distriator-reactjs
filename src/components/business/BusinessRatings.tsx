@@ -76,7 +76,7 @@ export function BusinessRatings({ ratings, viewState, businessName }: BusinessRa
                             <div className="w-80 h-40 flex-shrink-0 rounded-lg overflow-hidden relative bg-muted p-4 flex flex-col justify-between">
                                 {currentUser && (
                                     <div className="absolute top-2 right-2" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
-                                        <ThreeDotMenu />
+                                        <ThreeDotMenu username={rating.ratingAuthor} permlink={rating.ratingPermlink} />
                                     </div>
                                 )}
                                 <div>

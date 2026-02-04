@@ -1,5 +1,5 @@
-/* eslint-disable no-empty */
 import { useEffect, useState } from "react";
+import { useReportedContentStore } from "../stores/reportedContentStore";
 import { useParams, useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -28,40 +28,40 @@ import { BusinessRatingSummaryService } from "../services/business-rating-summar
 import type { BusinessRatingSummaryResponse } from "../types/business-rating";
 
 const BusinessDetailSkeleton = () => (
-    <div className="min-h-screen bg-background">
-      <div className="text-center py-4">
-      </div>
-      <div className="animate-pulse">
-        <div className="px-4 py-4 border-b border-border bg-background">
-          <div className="flex items-center justify-between">
-            <div className="p-2 bg-muted text-foreground rounded-full h-8 w-8"></div>
-            <div className="p-2 bg-muted text-foreground rounded-full h-8 w-8"></div>
+  <div className="min-h-screen bg-background">
+    <div className="text-center py-4">
+    </div>
+    <div className="animate-pulse">
+      <div className="px-4 py-4 border-b border-border bg-background">
+        <div className="flex items-center justify-between">
+          <div className="p-2 bg-muted text-foreground rounded-full h-8 w-8"></div>
+          <div className="p-2 bg-muted text-foreground rounded-full h-8 w-8"></div>
+        </div>
+        <div className="flex items-center gap-4 flex-1 mb-4 mt-4">
+          <div className="relative">
+            <div className="w-20 h-20 rounded-full bg-muted"></div>
           </div>
-          <div className="flex items-center gap-4 flex-1 mb-4 mt-4">
-            <div className="relative">
-              <div className="w-20 h-20 rounded-full bg-muted"></div>
-            </div>
-            <div>
-              <div className="h-8 bg-muted rounded w-48 mb-2"></div>
-              <div className="h-4 bg-muted rounded w-32"></div>
-              <div className="flex gap-3 mt-2 flex-wrap items-center">
-                <div className="h-6 w-12 bg-muted rounded"></div>
-              </div>
+          <div>
+            <div className="h-8 bg-muted rounded w-48 mb-2"></div>
+            <div className="h-4 bg-muted rounded w-32"></div>
+            <div className="flex gap-3 mt-2 flex-wrap items-center">
+              <div className="h-6 w-12 bg-muted rounded"></div>
             </div>
           </div>
-          <hr />
-          <div className="my-4 p-2">
-            <div className="h-40 bg-muted rounded mb-4">        <p className="text-lg font-semibold text-foreground flex justify-center item center">Business Details are loading...</p></div>
-            <div className="flex items-center justify-between mb-2 py-2">
-              <div className="h-8 bg-muted rounded w-1/3"></div>
-              <div className="h-8 bg-muted rounded w-1/4"></div>
-            </div>
-            <div className="h-64 bg-muted rounded"></div>
+        </div>
+        <hr />
+        <div className="my-4 p-2">
+          <div className="h-40 bg-muted rounded mb-4">        <p className="text-lg font-semibold text-foreground flex justify-center item center">Business Details are loading...</p></div>
+          <div className="flex items-center justify-between mb-2 py-2">
+            <div className="h-8 bg-muted rounded w-1/3"></div>
+            <div className="h-8 bg-muted rounded w-1/4"></div>
           </div>
+          <div className="h-64 bg-muted rounded"></div>
         </div>
       </div>
     </div>
-  );
+  </div>
+);
 
 
 const BusinessDetail = () => {
@@ -116,12 +116,25 @@ const BusinessDetail = () => {
     userRole === "admin" ||
     userRole === "super";
 
+  const { fetchReportedContent } = useReportedContentStore();
+
+
+  const { token, isAuthenticated } = useAuthData();
+
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      fetchReportedContent(token);
+    }
+  }, [isAuthenticated, token, fetchReportedContent]);
+
   const { reviews, viewState: reviewsViewState } = useBusinessReviews(
     business,
     userRole,
-    username,
+    username
   );
-  const { ratings, viewState: ratingsViewState } = useBusinessRatings(business);
+  const { ratings, viewState: ratingsViewState } = useBusinessRatings(
+    business
+  );
   const hasNotes = business?.contact?.notes;
   const hasWorkTime = business?.profile.workTime;
 
@@ -346,10 +359,10 @@ const BusinessDetail = () => {
               )}
             {business.distriator.subscriptionStatus ===
               "underInvestigation" && (
-              <div className="absolute bottom-0 right-0 bg-red-600 rounded-full p-1 shadow-md">
-                <AlertTriangle className="w-4 h-4 text-white" strokeWidth={3} />
-              </div>
-            )}
+                <div className="absolute bottom-0 right-0 bg-red-600 rounded-full p-1 shadow-md">
+                  <AlertTriangle className="w-4 h-4 text-white" strokeWidth={3} />
+                </div>
+              )}
           </div>
 
           {/* Business Info */}
@@ -387,22 +400,20 @@ const BusinessDetail = () => {
                     return (
                       <div key={i} className="relative w-5 h-5">
                         <Star
-                          className={`w-5 h-5 absolute ${
-                            i < fullStars
-                              ? "text-yellow-500 fill-yellow-500"
-                              : i === fullStars && partialPercentage > 0
-                                ? "text-gray-300"
-                                : "text-gray-300"
-                          }`}
+                          className={`w-5 h-5 absolute ${i < fullStars
+                            ? "text-yellow-500 fill-yellow-500"
+                            : i === fullStars && partialPercentage > 0
+                              ? "text-gray-300"
+                              : "text-gray-300"
+                            }`}
                         />
                         {i === fullStars && partialPercentage > 0 && (
                           <div className="absolute inset-0 overflow-hidden w-full h-full">
                             <Star
                               className="w-5 h-5 text-yellow-500 fill-yellow-500"
                               style={{
-                                clipPath: `inset(0 ${
-                                  100 - partialPercentage
-                                }% 0 0)`,
+                                clipPath: `inset(0 ${100 - partialPercentage
+                                  }% 0 0)`,
                               }}
                             />
                           </div>
