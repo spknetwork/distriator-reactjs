@@ -1,47 +1,31 @@
-import { useState } from "react";
-import { type BusinessReviewModel } from "../../types/business-review";
+import { useState } from 'react';
+import { ExternalLink, ChevronLeft, ChevronRight } from 'lucide-react';
+import { formatDistanceToNow } from 'date-fns';
+import { type BusinessReviewModel } from '../../types/business-review';
 import { ViewState } from '../../types/enums';
-import { Skeleton } from "@radix-ui/themes";
+import { ThreeDotMenu } from '../ThreeDotMenu';
+import { useAuthContext } from '../../context/AuthContext';
 
-interface BusinessReviewsPhotosProps {
+interface BusinessReviewsProps {
   reviews: BusinessReviewModel[];
   viewState: ViewState;
 }
 
-export function BusinessReviewsPhotos({ reviews, viewState }: BusinessReviewsPhotosProps) {
-  const [selectedImage, setSelectedImage] = useState<{ url: string; id: string } | null>(null);
-  const [loadedImages, setLoadedImages] = useState<{ [key: string]: boolean }>({});
-  const today = new Date().toISOString().split('T')[0]; 
+export function BusinessReviewsPhotos({
+  reviews,
+  viewState,
+}: BusinessReviewsProps) {
+  const [loadedAvatars, setLoadedAvatars] = useState<{ [key: string]: boolean }>({});
+  const [loadedPhotos, setLoadedPhotos] = useState<{ [key: string]: boolean }>({});
+  const [currentPhotoIndex, setCurrentPhotoIndex] = useState<{ [key: string]: number }>({});
+  const { currentUser } = useAuthContext();
 
-  // --- Collect all photos from reviews ---
-  const allPhotos = reviews.flatMap((review) =>
-    review.photos.map((photo, idx) => ({
-      id: `${review.id}-${idx}`,
-      url: photo,
-      username: review.username,
-      permlink: review.permlink,
-    }))
-  );
+  const topReviews = reviews.slice(0, 10);
 
-  const handleImageLoad = (id: string) => {
-    setLoadedImages((prev) => ({ ...prev, [id]: true }));
-  };
-
-  const handlePostClick = (username: string, permlink: string) => {
-    const url = `https://hive.blog/@${username}/${permlink}`;
-    window.open(url, "_blank", "noopener,noreferrer");
-  };
-
-  // --- UI States ---
   if (viewState === ViewState.LOADING) {
     return (
-      <div className="flex gap-4 overflow-x-auto pb-2">
-        {Array.from({ length: 4 }).map((_, i) => (
-          <Skeleton
-            key={i}
-            className="w-40 h-40 md:w-64 md:h-64 flex-shrink-0 rounded-lg"
-          />
-        ))}
+      <div className="flex items-center justify-center py-12">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
@@ -54,7 +38,7 @@ export function BusinessReviewsPhotos({ reviews, viewState }: BusinessReviewsPho
     );
   }
 
-  if (viewState === ViewState.EMPTY || reviews.length === 0) {
+  if (viewState === ViewState.EMPTY || topReviews.length === 0) {
     return (
       <div className="text-center py-12">
         <p className="text-muted-foreground">No reviews available</p>
@@ -62,75 +46,155 @@ export function BusinessReviewsPhotos({ reviews, viewState }: BusinessReviewsPho
     );
   }
 
+  const handlePostClick = (review: BusinessReviewModel) => {
+    const url = `https://hive.blog/@${review.username}/${review.permlink}`;
+    window.open(url, '_blank', 'noopener,noreferrer');
+  };
+
+  const handlePreviousPhoto = (reviewId: string, totalPhotos: number) => {
+    setCurrentPhotoIndex(prev => {
+      const newIndex = prev[reviewId] ? (prev[reviewId] - 1 + totalPhotos) % totalPhotos : totalPhotos - 1;
+      setLoadedPhotos(lp => ({ ...lp, [reviewId]: false })); // Reset on index change
+      return { ...prev, [reviewId]: newIndex };
+    });
+  };
+
+  const handleNextPhoto = (reviewId: string, totalPhotos: number) => {
+    setCurrentPhotoIndex(prev => {
+      const newIndex = prev[reviewId] !== undefined ? (prev[reviewId] + 1) % totalPhotos : 1;
+      setLoadedPhotos(lp => ({ ...lp, [reviewId]: false })); // Reset on index change
+      return { ...prev, [reviewId]: newIndex };
+    });
+  };
+
+  const getCurrentPhotoIndex = (reviewId: string) => {
+    return currentPhotoIndex[reviewId] || 0;
+  };
+
   return (
-    <div className="mb-8">
-      {/* Horizontal Scroll */}
-      <div className="flex gap-4 overflow-x-auto pb-2">
-        {allPhotos.map((photo) => (
-          <div
-            key={photo.id}
-            className="w-40 h-40 md:w-64 md:h-64 flex-shrink-0 rounded-lg overflow-hidden cursor-pointer relative bg-muted"
-            onClick={() => setSelectedImage({ url: photo.url, id: photo.id })}
-          >
-            {/* Loader */}
-            {!loadedImages[photo.id] && (
-              <Skeleton className="absolute inset-0" />
-            )}
-
-            <img
-              src={`https://images.hive.blog/200x0/${photo.url}?v=${photo.id}`}
-              alt={`Review by ${photo.username}`}
-              className={`w-full h-full object-cover transition-opacity duration-300 ${loadedImages[photo.id] ? "opacity-100" : "opacity-0"
-                }`}
-              onLoad={() => handleImageLoad(photo.id)}
-            />
-
-            {/* Username Overlay with Avatar */}
-            <div
-              className="absolute bottom-0 left-0 right-0 bg-black bg-opacity-50 text-white text-xs p-2 flex items-center justify-center"
-              onClick={(e) => {
-                e.stopPropagation();
-                handlePostClick(photo.username, photo.permlink);
-              }}
-            >
-              {/* Avatar - overlap effect */}
-              <div className="absolute -top-3 left-2">
+    <div className="flex overflow-x-auto gap-6 pb-4">
+      {topReviews.map((review) => (
+        <div
+          key={review.id}
+          className="bg-card rounded-lg border border-border p-4 space-y-4 w-80 flex-shrink-0"
+        >
+          {/* User Header */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="relative w-10 h-10">
+                {!loadedAvatars[review.id] && (
+                  <div className="absolute inset-0 rounded-full bg-muted animate-pulse"></div>
+                )}
                 <img
-                  src={`https://images.hive.blog/u/${photo.username}/avatar?d=${today}`}
-                  alt={photo.username}
-                  className="w-8 h-8 rounded-full border-2 border-white shadow-md"
+                  src={`https://images.hive.blog/u/${review.username}/avatar`}
+                  alt={`${review.username} avatar`}
+                  className={`w-10 h-10 rounded-full object-cover transition-opacity duration-300 ${loadedAvatars[review.id] ? 'opacity-100' : 'opacity-0'
+                    }`}
+                  onLoad={() => setLoadedAvatars((prev) => ({ ...prev, [review.id]: true }))}
                 />
               </div>
 
-              {/* Username */}
-              <span className="truncate">@{photo.username}</span>
+              <div>
+                <p className="font-semibold text-foreground">@{review.username}</p>
+                {review.created && (
+                  <p className="text-sm text-muted-foreground">
+                    {formatDistanceToNow(review.created, { addSuffix: true })}
+                  </p>
+                )}
+              </div>
             </div>
 
+            <div className="flex items-center gap-2">
+              {currentUser && (
+                <div onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
+                  <ThreeDotMenu username={review.username} permlink={review.permlink} />
+                </div>
+              )}
+            </div>
           </div>
-        ))}
-      </div>
 
-      {/* Image Modal */}
-      {selectedImage && (
-        <div
-          className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4"
-          onClick={() => setSelectedImage(null)}
-        >
-          <div className="relative max-w-4xl max-h-full">
-            <img
-              src={`https://images.hive.blog/200x0/${selectedImage.url}?v=${selectedImage.id}`}
-              alt="Full size"
-              className="max-w-full max-h-full object-contain"
-            />
+          {/* Review Content */}
+          <div className="pb-0 mb-1">
+            <div className="relative">
+              {review.photos.length > 0 && (
+                <div className="mb-4 relative w-full h-50 group">
+                  {!loadedPhotos[review.id] && (
+                    <div className="absolute inset-0 bg-muted animate-pulse rounded-lg"></div>
+                  )}
+                  <img
+                    src={`https://images.hive.blog/600x0/${review.photos[getCurrentPhotoIndex(review.id)]}`}
+                    alt="Review photo"
+                    className={`w-full h-50 object-cover rounded-lg transition-opacity duration-300 ${loadedPhotos[review.id] ? 'opacity-100' : 'opacity-0'
+                      }`}
+                    onLoad={() => setLoadedPhotos((prev) => ({ ...prev, [review.id]: true }))}
+                  />
+
+                  {/* Photo navigation arrows */}
+                  {review.photos.length > 1 && (
+                    <>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handlePreviousPhoto(review.id, review.photos.length);
+                        }}
+                        className="absolute left-2 top-1/2 transform -translate-y-1/2
+                        bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-1 rounded-full
+                        opacity-100 md:opacity-0 md:group-hover:opacity-100
+                        transition-opacity duration-200"
+                      >
+                        <ChevronLeft className="w-4 h-4" />
+                      </button>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleNextPhoto(review.id, review.photos.length);
+                        }}
+                        className="absolute right-2 top-1/2 transform -translate-y-1/2
+                        bg-black bg-opacity-60 hover:bg-opacity-80 text-white p-1 rounded-full
+                        opacity-100 md:opacity-0 md:group-hover:opacity-100
+                        transition-opacity duration-200"
+                      >
+                        <ChevronRight className="w-4 h-4" />
+                      </button>
+                      <div className="absolute top-2 right-2 bg-black bg-opacity-60 text-white px-2 py-1 rounded text-sm">
+                        {getCurrentPhotoIndex(review.id) + 1}/{review.photos.length}
+                      </div>
+                    </>
+                  )}
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Interaction Footer */}
+          <div className="flex items-center justify-between pt-2 border-t border-border">
+            {/* Amount Information */}
+            <div className="flex flex-col gap-1 pb-0 mb-1">
+              {review.paidAmount && (
+                <div className="flex items-center">
+                  <span className="text-xs text-muted-foreground">
+                    <b className="text-primary">Paid Amount:</b> {review.paidAmount} HBD
+                  </span>
+                </div>
+              )}
+              {review.cashbackAmount && (
+                <div className="flex items-center">
+                  <span className="text-xs text-muted-foreground">
+                    <b className="text-green-600">Cashback:</b> {review.cashbackAmount} HBD
+                  </span>
+                </div>
+              )}
+            </div>
             <button
-              onClick={() => setSelectedImage(null)}
-              className="absolute top-4 right-4 text-white text-2xl hover:text-gray-300"
+              onClick={() => handlePostClick(review)}
+              className="flex items-center gap-1 text-sm text-primary hover:text-primary/80"
             >
-              ×
+              <ExternalLink className="w-4 h-4" />
+              View Post
             </button>
           </div>
         </div>
-      )}
+      ))}
     </div>
   );
 }

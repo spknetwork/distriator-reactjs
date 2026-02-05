@@ -158,3 +158,34 @@ export interface CashbackLogsResponse {
     hasPrevPage: boolean;
   };
 }
+
+export interface ReportedUser {
+  _id: string;
+  reporter: string;
+  reportedUser: string;
+  reason: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReportedReview {
+  _id: string;
+  reporter: string;
+  author: string;
+  permlink: string;
+  reason: string;
+  status: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface ReportedUsersResponse {
+  success: boolean;
+  data: ReportedUser[];
+}
+
+export interface ReportedReviewsResponse {
+  success: boolean;
+  data: ReportedReview[];
+}

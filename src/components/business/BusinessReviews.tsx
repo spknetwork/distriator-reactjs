@@ -3,6 +3,8 @@ import { ExternalLink, EyeOff, ChevronLeft, ChevronRight } from 'lucide-react';
 import { formatDistanceToNow } from 'date-fns';
 import { type BusinessReviewModel, ReviewStatus } from '../../types/business-review';
 import { ViewState } from '../../types/enums';
+import { ThreeDotMenu } from '../ThreeDotMenu';
+import { useAuthContext } from '../../context/AuthContext';
 
 interface BusinessReviewsProps {
   reviews: BusinessReviewModel[];
@@ -22,6 +24,7 @@ export function BusinessReviews({
   const [loadedAvatars, setLoadedAvatars] = useState<{ [key: string]: boolean }>({});
   const [loadedPhotos, setLoadedPhotos] = useState<{ [key: string]: boolean }>({});
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState<{ [key: string]: number }>({});
+  const { currentUser } = useAuthContext();
 
   const isSingleCard = reviews.length === 1;
 
@@ -113,18 +116,25 @@ export function BusinessReviews({
               </div>
             </div>
 
-            {hasHideUnhidePermission && review.reviewStatus !== ReviewStatus.HIDDEN && (
-              <button
-                onClick={(e) => {
-                  e.stopPropagation();
-                  updateReviewStatus(review.permlink, true);
-                }}
-                disabled={updatingReviews.includes(review.permlink)}
-                className="text-sm text-destructive hover:text-destructive/80 disabled:opacity-50"
-              >
-                {updatingReviews.includes(review.permlink) ? 'Hiding...' : 'Hide'}
-              </button>
-            )}
+            <div className="flex items-center gap-2">
+              {hasHideUnhidePermission && review.reviewStatus !== ReviewStatus.HIDDEN && (
+                <button
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    updateReviewStatus(review.permlink, true);
+                  }}
+                  disabled={updatingReviews.includes(review.permlink)}
+                  className="text-sm text-destructive hover:text-destructive/80 disabled:opacity-50"
+                >
+                  {updatingReviews.includes(review.permlink) ? 'Hiding...' : 'Hide'}
+                </button>
+              )}
+              {currentUser && (
+                <div onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
+                  <ThreeDotMenu username={review.username} permlink={review.permlink} />
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Review Content */}

@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { BusinessRatingService } from '../services/business-rating-service';
 import type { BusinessRatingModel } from '../types/business-rating';
+import { type ReportedReview } from '../types/responses';
 
 interface BusinessRatingsState {
   ratings: BusinessRatingModel[];
@@ -11,8 +12,11 @@ interface BusinessRatingsState {
   hasMore: boolean;
   currentPage: number;
   currentAbortController: AbortController | null;
+  reportedUsers: string[];
+  reportedReviews: ReportedReview[];
 
   setBusinessId: (businessId: string) => void;
+  setReportedContent: (users: string[], reviews: ReportedReview[]) => void;
 
   fetchFirstPage: (signal?: AbortSignal) => Promise<void>;
   fetchNextPage: (signal?: AbortSignal) => Promise<void>;
@@ -29,6 +33,8 @@ export const useBusinessRatingsStore = create<BusinessRatingsState>((set, get) =
   hasMore: false,
   currentPage: 1,
   currentAbortController: null,
+  reportedUsers: [],
+  reportedReviews: [],
 
   setBusinessId: (businessId: string) => {
     const { currentAbortController } = get();
@@ -45,11 +51,21 @@ export const useBusinessRatingsStore = create<BusinessRatingsState>((set, get) =
     });
   },
 
+  setReportedContent: (users: string[], reviews: ReportedReview[]) => {
+    set({ reportedUsers: users, reportedReviews: reviews });
+    // Re-filter existing ratings if any
+    const { ratings } = get();
+    if (ratings.length > 0) {
+      const filtered = filterRatings(ratings, users, reviews);
+      set({ ratings: filtered });
+    }
+  },
+
   // ----------------------------------------
   // Fetch only PAGE 1 → show LOADER
   // ----------------------------------------
   fetchFirstPage: async (signal?: AbortSignal) => {
-    const { businessId, sortBy, currentAbortController } = get();
+    const { businessId, sortBy, currentAbortController, reportedUsers, reportedReviews } = get();
     if (!businessId) return;
 
     // Abort any ongoing request
@@ -73,9 +89,10 @@ export const useBusinessRatingsStore = create<BusinessRatingsState>((set, get) =
 
       if (response.data) {
         const data = response.data;
+        const filteredData = filterRatings(data.data, reportedUsers, reportedReviews);
 
         set({
-          ratings: data.data,
+          ratings: filteredData,
           currentPage: 1,
           hasMore: data.pagination.hasNextPage,
           isLoading: false,
@@ -98,7 +115,7 @@ export const useBusinessRatingsStore = create<BusinessRatingsState>((set, get) =
   // Load Page 2, 3, 4… silently (NO LOADER)
   // ----------------------------------------
   fetchNextPage: async (signal?: AbortSignal) => {
-    const { businessId, currentPage, hasMore, sortBy, currentAbortController } = get();
+    const { businessId, currentPage, hasMore, sortBy, currentAbortController, reportedUsers, reportedReviews } = get();
     if (!businessId || !hasMore) return;
 
     const apiSort = mapSortByToApi(sortBy);
@@ -115,9 +132,10 @@ export const useBusinessRatingsStore = create<BusinessRatingsState>((set, get) =
 
       if (response.data) {
         const data = response.data;
+        const filteredData = filterRatings(data.data, reportedUsers, reportedReviews);
 
         set(state => ({
-          ratings: [...state.ratings, ...data.data],
+          ratings: [...state.ratings, ...filteredData],
           currentPage: page,
           hasMore: data.pagination.hasNextPage
         }));
@@ -170,4 +188,15 @@ function mapSortByToApi(sortBy: 'newest' | 'oldest' | 'highest' | 'lowest') {
     case 'lowest': return 'rating-low';
     default: return 'date-recent';
   }
+}
+
+function filterRatings(ratings: BusinessRatingModel[], reportedUsers: string[], reportedReviews: ReportedReview[]) {
+  return ratings.filter(rating => {
+    const isUserReported = reportedUsers.includes(rating.ratingAuthor);
+    const isReviewReported = reportedReviews.some(r => {
+      const author = r.author ?? (r as { name?: string }).name;
+      return r.permlink === rating.ratingPermlink && author === rating.ratingAuthor;
+    });
+    return !isUserReported && !isReviewReported;
+  });
 }

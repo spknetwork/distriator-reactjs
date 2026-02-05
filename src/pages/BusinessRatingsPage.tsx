@@ -10,12 +10,16 @@ import { useBusinessRatingsStore } from "../stores/businessRatingsStore";
 import type {
   BusinessRatingSummaryResponse,
 } from "../types/business-rating";
+import { ThreeDotMenu } from "../components/ThreeDotMenu";
+import { useAuthContext } from "../context/AuthContext";
+import { useReportedContentStore } from "../stores/reportedContentStore";
 
 const BusinessRatingsPage = () => {
   const { businessName } = useParams<{ businessName: string }>();
   const navigate = useNavigate();
   const { businesses } = useBusinesses();
   const { user } = useAioha();
+  const { currentUser } = useAuthContext();
 
   const [ratingSummary, setRatingSummary] =
     useState<BusinessRatingSummaryResponse | null>(null);
@@ -31,7 +35,24 @@ const BusinessRatingsPage = () => {
     setBusinessId,
     fetchFirstPage,
     reset,
+    setReportedContent,
   } = useBusinessRatingsStore();
+
+  const { reportedUsers, reportedReviews, fetchReportedContent } = useReportedContentStore();
+  const { token, isAuthenticated } = useAuthData();
+
+  useEffect(() => {
+    if (isAuthenticated && token) {
+      fetchReportedContent(token);
+    }
+  }, [isAuthenticated, token, fetchReportedContent]);
+
+
+  useEffect(() => {
+    // Sync global store to local store (if needed, or just remove local store copy and filter in view?)
+    // Plan said: BusinessRatingsPage observes reportedContentStore and calls businessRatingsStore.setReportedContent
+    setReportedContent(reportedUsers, reportedReviews);
+  }, [reportedUsers, reportedReviews, setReportedContent]);
 
   // Infinite scroll refs
   const observerRef = useRef<IntersectionObserver | null>(null);
@@ -237,10 +258,10 @@ const BusinessRatingsPage = () => {
               )}
             {business.distriator.subscriptionStatus ===
               "underInvestigation" && (
-              <div className="absolute bottom-0 right-0 bg-red-600 rounded-full p-1 shadow-md">
-                <AlertTriangle className="w-4 h-4 text-white" strokeWidth={3} />
-              </div>
-            )}
+                <div className="absolute bottom-0 right-0 bg-red-600 rounded-full p-1 shadow-md">
+                  <AlertTriangle className="w-4 h-4 text-white" strokeWidth={3} />
+                </div>
+              )}
           </div>
 
           {/* Business Info */}
@@ -278,22 +299,20 @@ const BusinessRatingsPage = () => {
                     return (
                       <div key={i} className="relative w-5 h-5">
                         <Star
-                          className={`w-5 h-5 absolute ${
-                            i < fullStars
+                          className={`w-5 h-5 absolute ${i < fullStars
                               ? "text-yellow-500 fill-yellow-500"
                               : i === fullStars && partialPercentage > 0
-                              ? "text-gray-300"
-                              : "text-gray-300"
-                          }`}
+                                ? "text-gray-300"
+                                : "text-gray-300"
+                            }`}
                         />
                         {i === fullStars && partialPercentage > 0 && (
                           <div className="absolute inset-0 overflow-hidden w-full h-full">
                             <Star
                               className="w-5 h-5 text-yellow-500 fill-yellow-500"
                               style={{
-                                clipPath: `inset(0 ${
-                                  100 - partialPercentage
-                                }% 0 0)`,
+                                clipPath: `inset(0 ${100 - partialPercentage
+                                  }% 0 0)`,
                               }}
                             />
                           </div>
@@ -433,8 +452,8 @@ const BusinessRatingsPage = () => {
                   key={rating.id}
                   ref={index === ratings.length - 1 ? lastRatingRef : null}
                   className={`bg-card rounded-lg border border-border p-4 transition-colors ${rating.ratingPermlink
-                      ? "cursor-pointer hover:bg-muted/50"
-                      : ""
+                    ? "cursor-pointer hover:bg-muted/50"
+                    : ""
                     }`}
                   onClick={() => {
                     if (!rating.ratingPermlink) return;
@@ -460,8 +479,8 @@ const BusinessRatingsPage = () => {
                             <Star
                               key={i}
                               className={`w-4 h-4 ${i < rating.rating
-                                  ? "fill-yellow-500 text-yellow-500"
-                                  : "text-gray-300"
+                                ? "fill-yellow-500 text-yellow-500"
+                                : "text-gray-300"
                                 }`}
                             />
                           ))}
@@ -469,9 +488,16 @@ const BusinessRatingsPage = () => {
                       </div>
                     </div>
 
-                    <span className="text-sm text-muted-foreground">
-                      {format(rating.createdAt)}
-                    </span>
+                    <div className="flex items-center gap-2">
+                      <span className="text-sm text-muted-foreground">
+                        {format(rating.createdAt)}
+                      </span>
+                      {currentUser && (
+                        <div onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
+                          <ThreeDotMenu username={rating.ratingAuthor} permlink={rating.ratingPermlink} />
+                        </div>
+                      )}
+                    </div>
                   </div>
 
                   <p className="text-foreground">{rating.ratingText}</p>
