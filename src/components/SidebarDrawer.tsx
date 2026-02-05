@@ -24,6 +24,7 @@ import {
   Star,
   History,
   ShoppingCart,
+  Shield,
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { MdRefresh } from "react-icons/md";
@@ -137,6 +138,15 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
       icon: <Users className="w-5 h-5" />,
       path: "/manage-users/user",
     },
+    ...(userRoleType === RoleType.SUPER
+      ? [
+          {
+            label: "Admins",
+            icon: <Shield className="w-5 h-5" />,
+            path: "/manage-admins",
+          },
+        ]
+      : []),
   ];
 
   const manageBusinessItems = [
@@ -165,7 +175,14 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
     setIsManageBusinessExpanded(!isManageBusinessExpanded);
   };
 
-  const isManageUsersActive = location.pathname.startsWith("/manage-users");
+  const isManageUsersActive =
+    location.pathname.startsWith("/manage-users") ||
+    location.pathname.startsWith("/manage-admins");
+  useEffect(() => {
+    if (isManageUsersActive) {
+      setIsManageUsersExpanded(true);
+    }
+  }, [isManageUsersActive]);
   const isManageBusinessActive =
     location.pathname.startsWith("/catalogue") ||
     location.pathname.startsWith("/pos-select") ||
