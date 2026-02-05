@@ -13,6 +13,7 @@ import type {
 import { ThreeDotMenu } from "../components/ThreeDotMenu";
 import { useAuthContext } from "../context/AuthContext";
 import { useReportedContentStore } from "../stores/reportedContentStore";
+import { isIOS } from "../utils/platform-detection";
 
 const BusinessRatingsPage = () => {
   const { businessName } = useParams<{ businessName: string }>();
@@ -492,7 +493,7 @@ const BusinessRatingsPage = () => {
                       <span className="text-sm text-muted-foreground">
                         {format(rating.createdAt)}
                       </span>
-                      {currentUser && (
+                      {currentUser && isIOS() && (
                         <div onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
                           <ThreeDotMenu username={rating.ratingAuthor} permlink={rating.ratingPermlink} />
                         </div>

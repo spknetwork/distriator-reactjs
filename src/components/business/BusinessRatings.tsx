@@ -6,6 +6,7 @@ import { Skeleton } from '@radix-ui/themes';
 import { useNavigate } from 'react-router-dom';
 import { ThreeDotMenu } from '../ThreeDotMenu';
 import { useAuthContext } from '../../context/AuthContext';
+import { isIOS } from '../../utils/platform-detection';
 
 interface BusinessRatingsProps {
     ratings: BusinessRatingModel[];
@@ -74,7 +75,7 @@ export function BusinessRatings({ ratings, viewState, businessName }: BusinessRa
                         const peakdUrl = getPeakdRatingUrl(rating.ratingAuthor, rating.ratingPermlink);
                         const card = (
                             <div className="w-80 h-40 flex-shrink-0 rounded-lg overflow-hidden relative bg-muted p-4 flex flex-col justify-between">
-                                {currentUser && (
+                                {currentUser && isIOS() && (
                                     <div className="absolute top-2 right-2" onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
                                         <ThreeDotMenu username={rating.ratingAuthor} permlink={rating.ratingPermlink} />
                                     </div>

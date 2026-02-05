@@ -5,6 +5,7 @@ import { type BusinessReviewModel } from '../../types/business-review';
 import { ViewState } from '../../types/enums';
 import { ThreeDotMenu } from '../ThreeDotMenu';
 import { useAuthContext } from '../../context/AuthContext';
+import { isIOS } from '../../utils/platform-detection';
 
 interface BusinessReviewsProps {
   reviews: BusinessReviewModel[];
@@ -105,7 +106,7 @@ export function BusinessReviewsPhotos({
             </div>
 
             <div className="flex items-center gap-2">
-              {currentUser && (
+              {currentUser && isIOS() && (
                 <div onClick={(e) => { e.stopPropagation(); e.preventDefault(); }}>
                   <ThreeDotMenu username={review.username} permlink={review.permlink} />
                 </div>

@@ -1,15 +1,7 @@
 import React, { useState } from "react";
-import {
-  Trash2,
-  Ban,
-  UserCheck,
-  MoreVertical,
-  Circle,
-} from "lucide-react";
+import { Trash2 } from "lucide-react";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
-import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
 import { type RoleModel } from "../../types/role";
-import { useIsMobile } from "../../hooks/use-mobile";
 
 interface AdminTileProps {
   admin: RoleModel;
@@ -19,12 +11,9 @@ interface AdminTileProps {
 
 export const AdminTile: React.FC<AdminTileProps> = ({
   admin,
-  removeAdmin,
-  banUnbanAdmin,
+  removeAdmin
 }) => {
-  const isMobile = useIsMobile();
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
-  const [showBanDialog, setShowBanDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDelete = async () => {
@@ -32,13 +21,6 @@ export const AdminTile: React.FC<AdminTileProps> = ({
     const success = await removeAdmin(admin);
     setIsLoading(false);
     if (success) setShowDeleteDialog(false);
-  };
-
-  const handleBanUnban = async () => {
-    setIsLoading(true);
-    const success = await banUnbanAdmin(admin, !admin.banned);
-    setIsLoading(false);
-    if (success) setShowBanDialog(false);
   };
 
   const ActionButtons = () => (
