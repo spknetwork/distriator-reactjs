@@ -29,6 +29,8 @@ import BusinessOnboardingPost from "./pages/BusinessOnboardingPost";
 import { RoleView } from "./components/UserManagement/RoleView";
 import { AddRoleMember } from "./components/UserManagement/AddRoleMember";
 import { RoleSettings } from "./components/UserManagement/RoleSettings";
+import { ManageAdmins } from "./components/UserManagement/ManageAdmins";
+import { AddAdmin } from "./components/UserManagement/AddAdmin";
 import { BusinessMiniForm } from "./components/business/BusinessMiniForm";
 import LocationPicker from "./components/business/form/LocationPicker";
 import BusinessFormView from "./components/business/form/BusinessFormView";
@@ -214,6 +216,10 @@ const App = () => {
                 path="/manage-users/:roleType/settings/:username"
                 element={<RoleSettings />}
               />
+
+              {/* Admin Management Routes (Super Admin only) */}
+              <Route path="/manage-admins" element={<ManageAdmins />} />
+              <Route path="/manage-admins/add" element={<AddAdmin />} />
 
               {/* User Wallet */}
               <Route path="/user-wallet" element={<UserWallet />} />
