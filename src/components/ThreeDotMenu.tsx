@@ -47,12 +47,13 @@ export function ThreeDotMenu({ username, permlink }: ThreeDotMenuProps) {
     }
 
     if (result.valid) {
-      toast.success(result.data?.message || "Report submitted successfully");
-
+      
       // Update store immediately – components will re-filter and hide reported content without reload
       if (reportType === 'user') {
+        toast.success("User has been reported");
         addReportedUser(username);
       } else {
+        toast.success("Review has been reported");
         if (permlink) {
           addReportedReview({
             _id: 'temp_id_' + Date.now(),
@@ -68,6 +69,44 @@ export function ThreeDotMenu({ username, permlink }: ThreeDotMenuProps) {
       }
     } else {
       toast.error(result.errorMessage || "Failed to submit report");
+    }
+  };
+
+  const handleBlock = async (type: 'user' | 'post') => {
+    if (!isAuthenticated) {
+      toast.error("Please login to block");
+      return;
+    }
+    if (!token) return;
+    if (type === 'post' && !permlink) return;
+
+    const reason = 'Block';
+    let result;
+    if (type === 'user') {
+      result = await ReportService.reportUser(token, username, reason);
+    } else {
+      result = await ReportService.reportReview(token, username, permlink!, reason);
+    }
+
+    if (result.valid) {
+      if (type === 'user') {
+        toast.success("User has been blocked");
+        addReportedUser(username);
+      } else if (permlink) {
+        toast.success("Review has been blocked");
+        addReportedReview({
+          _id: 'temp_id_' + Date.now(),
+          reporter: 'current_user',
+          author: username,
+          permlink,
+          reason,
+          status: 'pending',
+          createdAt: new Date().toISOString(),
+          updatedAt: new Date().toISOString()
+        } as any);
+      }
+    } else {
+      toast.error(result.errorMessage || "Failed to submit block");
     }
   };
 
@@ -131,7 +170,8 @@ export function ThreeDotMenu({ username, permlink }: ThreeDotMenuProps) {
                           onClick={() => {
                             if (action === 'report_author') handleOpenReport('user');
                             else if (action === 'report_content') handleOpenReport('post');
-                            else alert(`${label} clicked`);
+                            else if (action === 'block_author') handleBlock('user');
+                            else if (action === 'block_content') handleBlock('post');
                           }}
                           className={`
                             flex w-full items-center gap-3
