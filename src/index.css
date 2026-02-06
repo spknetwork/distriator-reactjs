@@ -149,6 +149,16 @@
   color: hsl(var(--card-foreground)) !important;
 }
 
+@keyframes blink-yellow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.3; }
+}
+
+.text-blink-yellow {
+  color: rgb(234 179 8) !important;
+  animation: blink-yellow 1s ease-in-out infinite;
+}
+
 @layer utilities {
   /* Override .bg-background */
   .bg-background {

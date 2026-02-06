@@ -23,6 +23,7 @@ import { useAioha } from "@aioha/react-provider";
 import { parseSocialUrl } from "../utils/social-url-parser";
 import { DhiveService } from "../services/dhive-service";
 import { BusinessSelectionDialog } from "./business/BusinessSelectionDialog";
+import { isMobilePlatform } from "../utils/platform-detection";
 
 dayjs.extend(relativeTime);
 
@@ -64,6 +65,7 @@ export function ClaimScreen({
   const currentClaim = claimData?.claim;
   const [hbdAvailable, setHBDAvailable] = useState(false);
   const [showBusinessSelection, setShowBusinessSelection] = useState(false);
+  const isMobile = isMobilePlatform();
 
   useEffect(() => {
     const checkRatingInitially = async () => {
@@ -838,6 +840,12 @@ export function ClaimScreen({
                       </span>
                     </div>
                   )}
+                  {isMobile && isSubmitting && (
+                    <div className="text-center text-blink-yellow">
+                      Go to keychain & approve the request
+                    </div>
+                  )}
+
                   {/* Buttons */}
                   <div className="flex flex-col space-y-2 w-full">
                     {!submitted ? (

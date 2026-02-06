@@ -10,6 +10,7 @@ import type { ProductModel } from "../../types/product";
 import type { CartModel } from "../../types/cart";
 import { useAuthData } from "../../utils/auth-utils";
 import { KeyTypes } from "@aioha/aioha";
+import { isMobilePlatform } from "../../utils/platform-detection";
 
 interface PayWithHbdProps {
   cart: Record<string, number>;
@@ -58,6 +59,7 @@ export function PayWithHbd({
   const { aioha } = useAioha();
   const { token, username } = useAuthData();
   const navigate = useNavigate();
+  const isMobile = isMobilePlatform();
 
   useEffect(() => {
     return () => {
@@ -260,7 +262,7 @@ export function PayWithHbd({
         cartIdToUse = response.data.id;
         setTransferResult("Cart created successfully. Proceeding to payment...");
       } else {
-        setTransferResult("Using existing cart. Proceeding to payment...");
+        setTransferResult(isMobile ? "Go to keychain & approve the request to pay" :"Using existing cart. Proceeding to payment...");
       }
 
       const createdCartId = cartIdToUse;

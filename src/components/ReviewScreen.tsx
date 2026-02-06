@@ -9,6 +9,7 @@ import type { UserClaimResponseDTO } from "../types/claim";
 import type { BusinessModel, ReviewField } from "../types/business";
 import { BusinessReviewService } from "../services/business-review-service";
 import { useAuthData } from '../utils/auth-utils';
+import { isMobilePlatform } from "../utils/platform-detection";
 
 export function ReviewScreen() {
   const navigate = useNavigate();
@@ -47,7 +48,7 @@ export function ReviewScreen() {
   const [serverDisplayName, setServerDisplayName] = useState("");
   const [serverRating, setServerRating] = useState<number>(0);
   const [serverQuestionCompleted, setServerQuestionCompleted] = useState<boolean>(!requiresServerQuestion);
-
+  const isMobile = isMobilePlatform();
   // If not passed, fetch once
   useEffect(() => {
     if (!passedFields && business?.id) {
@@ -322,7 +323,7 @@ To benefit from Distriator and receive discounts on your Hive Dollars purchases:
           <div className="flex items-center gap-3 bg-background/90 text-foreground px-5 py-4 rounded-lg shadow-xl border border-border">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span>
-              {isClaiming ? "Submitting business review... Please wait" : "Posting business review... Please wait"}
+              {isClaiming ? "Submitting business review... Please wait" : isMobile ? "Go to keychain & approve the request to submit business review" :  "Posting business review... Please wait"}
             </span>
           </div>
         </div>
