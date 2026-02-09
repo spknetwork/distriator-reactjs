@@ -70,7 +70,8 @@ export const useBusinessReviews = (
     // Usually ViewState.EMPTY means "no content".
     if (rawReviews.length > 0) {
       setViewState(filtered.length > 0 ? ViewState.DATA : ViewState.EMPTY);
-    } else if (!fetchError && viewState !== ViewState.LOADING) {
+    } else if (!fetchError) {
+      // Fetch completed with no reviews; stop loading and show empty state
       setViewState(ViewState.EMPTY);
     }
   }, [rawReviews, reportedUsers, reportedReviews, hasHideUnhidePermission, fetchError, viewState]);
