@@ -27,9 +27,12 @@ export function BusinessFormStep1({ formData, updateFormData, onValidationChange
     fetchBusinessTypes();
   }, []);
 
+  const typeOptions = Object.keys(businessTypes);
+  const subtypeOptions = formData.business_type ? (businessTypes[formData.business_type] || []) : [];
+
   useEffect(() => {
     validateStep();
-  }, [formData.displayName, formData.business_type, formData.business_subtype]);
+  }, [formData.displayName, formData.business_type, formData.business_subtype, businessTypes]);
 
   const validateStep = () => {
     const newErrors: Record<string, string> = {};
@@ -38,9 +41,13 @@ export function BusinessFormStep1({ formData, updateFormData, onValidationChange
     }
     if (!formData.business_type) {
       newErrors.business_type = "Business type is required";
+    } else if (!typeOptions.includes(formData.business_type)) {
+      newErrors.business_type = "Please select a business type from the list";
     }
     if (!formData.business_subtype) {
       newErrors.business_subtype = "Business subtype is required";
+    } else if (!subtypeOptions.includes(formData.business_subtype)) {
+      newErrors.business_subtype = "Please select a business subtype from the list";
     }
     setErrors(newErrors);
     const isValid = Object.keys(newErrors).length === 0;
@@ -81,9 +88,9 @@ export function BusinessFormStep1({ formData, updateFormData, onValidationChange
 
       <BusinessDropdown
         label="Business Type"
-        value={formData.business_type}
+        value={typeOptions.includes(formData.business_type) ? formData.business_type : ""}
         onChange={handleBusinessTypeChange}
-        options={Object.keys(businessTypes)}
+        options={typeOptions}
         placeholder="Select business type"
         required
         error={errors.business_type}
@@ -91,9 +98,9 @@ export function BusinessFormStep1({ formData, updateFormData, onValidationChange
 
       <BusinessDropdown
         label="Business Subtype"
-        value={formData.business_subtype}
+        value={subtypeOptions.includes(formData.business_subtype) ? formData.business_subtype : ""}
         onChange={(value) => updateFormData("business_subtype", value)}
-        options={businessTypes[formData.business_type] || []}
+        options={subtypeOptions}
         placeholder="Select business subtype"
         required
         error={errors.business_subtype}

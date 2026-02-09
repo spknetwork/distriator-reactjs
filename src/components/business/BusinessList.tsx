@@ -300,11 +300,18 @@ export default function BusinessList() {
     );
   };
 
-  // Compose final list to display: base list (filtered or searched) + keyword filter
+  // Compose final list to display: base list (filtered or searched) + keyword filter, sorted by created date (newest first)
   const baseItems = hasActiveFilters ? filteredItems : searchedItems;
-  const displayedItems = keyword
-    ? baseItems.filter((b) => matchesKeyword(b, keyword))
-    : baseItems;
+  const displayedItems = useMemo(() => {
+    const list = keyword
+      ? baseItems.filter((b) => matchesKeyword(b, keyword))
+      : baseItems;
+    return [...list].sort((a, b) => {
+      const aTime = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const bTime = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return bTime - aTime; // newest first
+    });
+  }, [baseItems, keyword]);
 
   return (
     <div className={isMobile ? "relative p-2" : "relative p-6"}>
