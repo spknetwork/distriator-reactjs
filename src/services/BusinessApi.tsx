@@ -67,13 +67,23 @@ import { handleTokenExpiration } from '../utils/auth-utils';
      body: JSON.stringify(businessData),
    });
 
-   // Check for token expiration
-   const isTokenExpired = await handleTokenExpiration(response);
+   // Check for token expiration (use clone so we can still read body for error message)
+   const isTokenExpired = await handleTokenExpiration(response.clone());
    if (isTokenExpired) {
      throw new Error('Token expired');
    }
 
-   if (!response.ok) throw new Error("Failed to update business");
+   if (!response.ok) {
+    let errorMessage = "Failed to update business";
+    try {
+      const errorData = await response.json();
+      if (errorData?.message) errorMessage = errorData.message;
+      else if (errorData?.error) errorMessage = errorData.error;
+    } catch {
+      // Response body may not be valid JSON
+    }
+    throw new Error(errorMessage);
+  }
    const jsonData = await response.json();
    const responseData = jsonData.data as string;
    const decryptedText = CryptoJS.AES.decrypt(responseData, apiKey).toString(
