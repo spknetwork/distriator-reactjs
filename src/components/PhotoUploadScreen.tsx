@@ -7,6 +7,18 @@ import { BusinessReviewService } from "../services/business-review-service";
 import { Button, Card } from "@radix-ui/themes";
 import { useAuthData } from "../utils/auth-utils";
 import { toast } from "sonner";
+import { isMobilePlatform } from "../utils/platform-detection";
+import { Camera, CameraResultType, CameraSource } from "@capacitor/camera";
+
+function dataURLtoFile(dataUrl: string, filename: string): File {
+  const arr = dataUrl.split(",");
+  const mime = arr[0].match(/:(.*?);/)?.[1] ?? "image/jpeg";
+  const bstr = atob(arr[1] ?? "");
+  const n = bstr.length;
+  const u8arr = new Uint8Array(n);
+  for (let i = 0; i < n; i++) u8arr[i] = bstr.charCodeAt(i);
+  return new File([u8arr], filename, { type: mime });
+}
 
 export function PhotoUploadScreen() {
   const navigate = useNavigate();
@@ -26,53 +38,67 @@ export function PhotoUploadScreen() {
       business?.profile.businessType?.toLowerCase() || ""
     );
 
+  const isNative = isMobilePlatform();
   const ua = navigator.userAgent || "";
   const isIOS = /iPhone|iPad|iPod/i.test(ua);
   const isAndroid = /Android/i.test(ua);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (!file) return;
-
-    const img = new Image();
-    img.src = URL.createObjectURL(file);
-
-    img.onload = () => {
-      const maxSize = 800;
-      let { width, height } = img;
-
-      // maintain aspect ratio
-      if (width > height) {
-        if (width > maxSize) {
-          height *= maxSize / width;
-          width = maxSize;
+  const resizeImageFile = (file: File): Promise<File> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = URL.createObjectURL(file);
+      img.onload = () => {
+        const maxSize = 800;
+        let { width, height } = img;
+        if (width > height) {
+          if (width > maxSize) {
+            height *= maxSize / width;
+            width = maxSize;
+          }
+        } else {
+          if (height > maxSize) {
+            width *= maxSize / height;
+            height = maxSize;
+          }
         }
-      } else {
-        if (height > maxSize) {
-          width *= maxSize / height;
-          height = maxSize;
-        }
-      }
+        const canvas = document.createElement("canvas");
+        canvas.width = width;
+        canvas.height = height;
+        const ctx = canvas.getContext("2d");
+        ctx?.drawImage(img, 0, 0, width, height);
+        URL.revokeObjectURL(img.src);
+        canvas.toBlob((blob) => {
+          if (blob) {
+            resolve(new File([blob], file.name, { type: blob.type }));
+          } else {
+            reject(new Error("Failed to resize image"));
+          }
+        }, "image/jpeg", 0.8);
+      };
+      img.onerror = () => {
+        URL.revokeObjectURL(img.src);
+        reject(new Error("Failed to load image"));
+      };
+    });
+  };
 
-      const canvas = document.createElement("canvas");
-      canvas.width = width;
-      canvas.height = height;
-      const ctx = canvas.getContext("2d");
-      ctx?.drawImage(img, 0, 0, width, height);
+  const addPhotoFiles = async (files: File[]) => {
+    if (files.length === 0) return;
+    try {
+      const resized = await Promise.all(files.map(resizeImageFile));
+      setPhotos((prev) => [...prev, ...resized].slice(0, 10));
+    } catch (err) {
+      console.error("Error processing images:", err);
+      toast.error("Failed to process some images. Please try again.");
+    }
+  };
 
-      canvas.toBlob((blob) => {
-        if (blob) {
-          // resized File
-          const resizedFile = new File([blob], file.name, { type: blob.type });
-
-          setPhotos((prev) => {
-            if (prev.length >= 10) return prev; // limit 10
-            return [...prev, resizedFile];
-          });
-
-        }
-      }, "image/jpeg", 0.8);
-    };
+  const handleFileChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
+    const fileList = event.target.files;
+    if (!fileList?.length) return;
+    const files = Array.from(fileList);
+    await addPhotoFiles(files);
+    event.target.value = "";
   };
 
   const getCameraHelpText = (): string => {
@@ -85,15 +111,46 @@ export function PhotoUploadScreen() {
     return "Desktop: Check browser site settings (lock icon in address bar) and allow Camera.";
   };
 
-  const openCamera = async () => {
+  const openCameraOrPicker = async () => {
+    if (photos.length >= 10) {
+      toast.error("You can only add up to 10 photos.");
+      return;
+    }
+
+    if (isNative) {
+      try {
+        setCameraError(null);
+        const source = allowGallery
+          ? CameraSource.Prompt
+          : CameraSource.Camera;
+        const result = await Camera.getPhoto({
+          quality: 80,
+          resultType: CameraResultType.DataUrl,
+          source,
+          promptLabelHeader: "Photo",
+          promptLabelPhoto: "Choose from Gallery",
+          promptLabelPicture: "Take Photo",
+        });
+        if (result.dataUrl) {
+          const file = dataURLtoFile(
+            result.dataUrl,
+            `photo-${Date.now()}.${result.format ?? "jpeg"}`
+          );
+          await addPhotoFiles([file]);
+        }
+      } catch (err: any) {
+        if (err?.message !== "User cancelled photos app") {
+          console.error("Camera error:", err);
+          toast.error("Could not open camera or gallery. Please check permissions.");
+          setCameraError(`${err?.message ?? "Camera error"} ${getCameraHelpText()}`);
+        }
+      }
+      return;
+    }
+
     const allowed = await checkCameraPermission();
     if (!allowed) return;
-
-    if (photos.length < 10) {
-      fileInputRef.current?.click();
-    } else {
-      alert("You can only take up to 10 photos.");
-    }
+    fileInputRef.current?.click();
   };
 
   const checkCameraPermission = async (): Promise<boolean> => {
@@ -224,34 +281,16 @@ export function PhotoUploadScreen() {
               capture={allowGallery ? undefined : "environment" }
               onChange={handleFileChange}
             />
-            {isIOS ?
-              (<label
-                htmlFor="photo-upload"
-                className="cursor-pointer"
-                onClick={() => {
-                  openCamera();
-                }}
-              >
-                <div className="flex items-center justify-center space-x-2 bg-success text-primary-foreground px-4 py-2 rounded-lg shadow-md hover:bg-success/90 transition-colors">
-                  <Button asChild>
-                    <span>{allowGallery ? "Choose Photos" : "Open Camera"}</span>
-                  </Button>
-                </div>
-              </label>)
-              :
-              (<div
-                className="cursor-pointer"
-                onClick={() => {
-                  openCamera();
-                }}
-              >
-                <div className="flex items-center justify-center space-x-2 bg-success text-primary-foreground px-4 py-2 rounded-lg shadow-md hover:bg-success/90 transition-colors">
-                  <Button asChild>
-                    <span>{allowGallery ? "Choose Photos" : "Open Camera"}</span>
-                  </Button>
-                </div>
-              </div>)
-            }
+            <div
+              className="cursor-pointer"
+              onClick={openCameraOrPicker}
+            >
+              <div className="flex items-center justify-center space-x-2 bg-success text-primary-foreground px-4 py-2 rounded-lg shadow-md hover:bg-success/90 transition-colors">
+                <Button asChild>
+                  <span>{allowGallery ? "Choose Photos" : "Open Camera"}</span>
+                </Button>
+              </div>
+            </div>
           </div>
         </Card>
 
