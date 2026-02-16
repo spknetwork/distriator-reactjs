@@ -220,14 +220,12 @@ export default function BusinessList() {
 
   const canManageBusinessOnboarding = (biz: BusinessModel): boolean => {
     if (!username) return false;
-    const isOwner = biz.distriator.owner === username;
     const isGuide = biz.distriator.guides?.some((guide) => guide.name === username);
     const isCreatorGuide =
       biz.distriator.creator === username && Boolean(biz.distriator.guides?.some((guide) => guide.name === username));
     return (
       userRole === "admin" ||
       userRole === "super" ||
-      isOwner ||
       isGuide ||
       isCreatorGuide
     );

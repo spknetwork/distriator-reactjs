@@ -277,7 +277,7 @@ export function BusinessFormStep7Onboarding({ businessData, isMini, onPrevious, 
       }
     } catch (error) {
       console.error(error);
-      toast.error("Failed to save Hive post link");
+      toast.error(error instanceof Error ? error.message : "Failed to submit Hive post link");
     } finally {
       setIsSubmittingHiveLink(false);
     }

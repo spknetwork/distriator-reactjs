@@ -312,11 +312,8 @@ export const useBusinessesStore = create<BusinessesState>((set, get) => ({
         searchedItems: updated,
         filteredItems: updated
       });
-
-      toast.success("Business updated successfully");
     } catch (error) {
       console.error("Error updating business:", error);
-      toast.error("Failed to update business");
       set({ viewState: ViewState.ERROR });
       throw error;
     }
