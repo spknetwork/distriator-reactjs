@@ -28,6 +28,7 @@ import {
 } from "lucide-react";
 import { useEffect, useState } from "react";
 import { MdRefresh } from "react-icons/md";
+import { SiGoogleplay, SiAppstore } from "react-icons/si";
 
 import ReattemptClaimDialog from "./ReattemptClaim";
 import { RoleType } from "../types/role";
@@ -79,6 +80,19 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
   const APP_VERSION = packageJson.version;
   const BRANCH_NAME = packageJson.deployment.branch;
   const COMMIT_HASH = packageJson.deployment.commitHash;
+
+  const appStoreLinks = [
+    {
+      label: "Get it on Google Play",
+      icon: <SiGoogleplay className="w-6 h-6" />,
+      url: "https://play.google.com/store/apps/details?id=com.distriator.app&pcampaignid=web_share",
+    },
+    {
+      label: "Download on the App Store",
+      icon: <SiAppstore className="w-6 h-6" />,
+      url: "https://apps.apple.com/pl/app/distriator/id6758208375",
+    },
+  ];
 
   const menuItems = [
     // Business-related routes moved to Manage Business section
@@ -528,6 +542,29 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
                 ))}
               </div>
             )}
+
+            {/* Get the App - Play Store & App Store */}
+            <div className="pt-3 mt-3 border-t border-border">
+              <p className="px-3 mb-2 text-xs font-medium text-muted-foreground uppercase tracking-wide">
+                Get the App
+              </p>
+              <div className="space-y-1">
+                {appStoreLinks.map((item) => (
+                  <a
+                    key={item.label}
+                    href={item.url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center gap-3 px-3 py-2.5 rounded-lg transition-colors text-foreground hover:bg-accent border border-border/50 hover:border-border"
+                  >
+                    <span className="flex items-center justify-center w-9 h-9 rounded-lg bg-muted/80 text-foreground">
+                      {item.icon}
+                    </span>
+                    <span className="text-sm font-medium">{item.label}</span>
+                  </a>
+                ))}
+              </div>
+            </div>
           </nav>
 
           {/* Footer with version + reload */}
