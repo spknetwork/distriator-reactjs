@@ -4,12 +4,9 @@ import { useAioha } from "@aioha/react-provider";
 import { AuthButton } from 'hive-authentication';
 const HD_API_SERVER = import.meta.env.VITE_HD_API_SERVER || 'https://beta-api.distriator.com';
 import type { HiveAuthUser } from "../context/AuthContext";
-import { useAuthKeysStore, type AuthKeysState } from "../stores/authKeysStore.ts";
 
 const LoginButton: React.FC = () => {
-  const { aioha } = useAioha();
-  const setKeys = useAuthKeysStore((s: AuthKeysState) => s.setKeys);
-
+  const { aioha } = useAioha()
   const handleAuthenticate = async (hiveResult: HiveAuthUser) => {
     const response = await fetch(`${HD_API_SERVER}/login`, {
       method: "POST",
@@ -26,15 +23,6 @@ const LoginButton: React.FC = () => {
     }
 
     const data = await response.json();
-
-    const hasActiveKey = !!hiveResult.privateActiveKey;
-    setKeys(
-      hiveResult.username,
-      hasActiveKey,
-      hiveResult.privateActiveKey,
-      hiveResult.privatePostingKey
-    );
-
     return JSON.stringify(data);
   };
 

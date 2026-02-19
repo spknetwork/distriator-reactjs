@@ -11,10 +11,6 @@ export interface HiveAuthUser {
   publicKey: string;
   proof: string;
   serverResponse?: string;
-  /** Set when user logs in with private key and supplies active key (optional field) */
-  privateActiveKey?: string;
-  /** Set when user logs in with private key (posting key) */
-  privatePostingKey?: string;
 }
 
 export interface HiveServerResponse {

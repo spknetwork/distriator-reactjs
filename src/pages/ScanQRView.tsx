@@ -10,9 +10,6 @@ import { ProductCategory } from "../types/product";
 import { useAioha } from "@aioha/react-provider";
 import { KeyTypes } from "@aioha/aioha";
 import type { Operation } from "@hiveio/dhive";
-import { useAuthKeysStore, type AuthKeysState } from "../stores/authKeysStore.ts";
-import { PlaintextKeyProvider } from '@aioha/aioha/build/providers/custom/plaintext.js';
-import { useProgrammaticAuth } from "hive-authentication";
 import { useAuthStore } from 'hive-authentication';
 
 const HIVE_SIGN_OP_PREFIX = "hive://sign/op/";
@@ -29,10 +26,8 @@ interface CameraDevice {
 
 export function ScanQrView() {
   const navigate = useNavigate();
-  const { token, username, provider, hasActiveKey, privatePostingKey } = useAuthData();
+  const { token, username } = useAuthData();
   const { aioha } = useAioha();
-  const { loginWithPrivateKey } = useProgrammaticAuth(aioha);
-  const getKeys = useAuthKeysStore((s: AuthKeysState) => s.getKeys);
   const { businesses } = useBusinesses();
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -282,19 +277,9 @@ export function ScanQrView() {
   const handleConfirmHiveTransfer = async () => {
     if (!parsedHiveOp) return;
 
-    if (provider === "privatePostingKey" && !hasActiveKey) {
-      toast.error("Active key required", {
-        description: "We advise you to log in with Hive Auth to complete this payment.",
-      });
-      return;
-    }
-
     setIsTransferring(true);
     try {
-      if (provider === "privatePostingKey" && hasActiveKey) {
-        haAuthStore.switchToActiveForCurrentUser();
-      }
-
+      haAuthStore.switchToActiveForCurrentUser();
       const result = await aioha.signAndBroadcastTx([parsedHiveOp as Operation], KeyTypes.Active);
       haAuthStore.switchToPostingForCurrentUser();
       const ok = result && typeof result === "object" && result.success === true;
