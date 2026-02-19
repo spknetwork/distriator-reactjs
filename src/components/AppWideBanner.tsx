@@ -152,7 +152,10 @@ const AppWideBanner: FC = () => {
                     <Link
                       to={`/business/${b.profile.displayName}/onboarding-post`}
                       className="rounded-md bg-[#6366f1] px-3 py-1 text-xs font-semibold text-white transition hover:bg-[#5558e3]"
-                      onClick={() => setShowActionsModal(false)}
+                      onClick={() => {
+                        setShowActionsModal(false)
+                        setDismissed(true)}
+                      }
                     >
                       Verify
                     </Link>
