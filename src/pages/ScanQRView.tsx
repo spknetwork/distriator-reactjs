@@ -13,6 +13,7 @@ import type { Operation } from "@hiveio/dhive";
 import { useAuthKeysStore, type AuthKeysState } from "../stores/authKeysStore.ts";
 import { PlaintextKeyProvider } from '@aioha/aioha/build/providers/custom/plaintext.js';
 import { useProgrammaticAuth } from "hive-authentication";
+import { useAuthStore } from 'hive-authentication';
 
 const HIVE_SIGN_OP_PREFIX = "hive://sign/op/";
 
@@ -48,7 +49,7 @@ export function ScanQrView() {
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isScannedRef = useRef(false);
   const hasStartedRef = useRef(false);
-
+  const haAuthStore = useAuthStore();
   // Load available cameras
   const loadCameras = async () => {
     try {
@@ -291,15 +292,11 @@ export function ScanQrView() {
     setIsTransferring(true);
     try {
       if (provider === "privatePostingKey" && hasActiveKey) {
-        const privateActiveKey = getKeys(username)?.privateActiveKey;
-        if (privateActiveKey) {
-          // await loginWithPrivateKey(username, privatePostingKey);
-          const plaintextProvider = new PlaintextKeyProvider(privateActiveKey);
-          aioha.registerCustomProvider(plaintextProvider);
-        }
+        haAuthStore.switchToActiveForCurrentUser();
       }
 
       const result = await aioha.signAndBroadcastTx([parsedHiveOp as Operation], KeyTypes.Active);
+      haAuthStore.switchToPostingForCurrentUser();
       const ok = result && typeof result === "object" && result.success === true;
       if (ok) {
         toast.success("Payment sent", {
