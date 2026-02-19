@@ -54,30 +54,14 @@ const AppWideBanner: FC = () => {
       : null;
 
   const guideMessage =
-    userIsGuideFor.length > 0 ? (
-      <>
-        {userIsGuideFor.map((b, index) => (
-          <span key={b.id}>
-            <Link
-              to={`/business/${b.profile.displayName}/onboarding-post`}
-              className="font-bold underline"
-            >
-              "{b.profile.displayName}"
-            </Link>
-            {index < userIsGuideFor.length - 1 && ", "}
-          </span>
-        ))}{" "}
-        {userIsGuideFor.length > 1 ? "are" : "is"} required to submit business
-        onboarding post.
-      </>
-    ) : null;
+    userIsGuideFor.length > 0
+      ? "Please update business onboarding verification posts for one or many businesses."
+      : null;
 
   const subtitle =
     userOwnedBusinesses.length > 0
       ? `Allow my business ${userOwnedBusinesses[0].profile.displayName} to expire`
-      : userIsGuideFor.length > 0
-        ? "Allow all businesses (for which I am a trusted guide) to expire"
-        : null;
+      : null;
 
   const handleHideForever = () => {
     if (typeof localStorage !== "undefined" && currentUser) {
@@ -140,13 +124,44 @@ const AppWideBanner: FC = () => {
               id="banner-modal-title"
               className="text-center text-lg font-semibold text-white"
             >
-              All businesses are required to submit business onboarding post.
+              {guideMessage ??
+                "All businesses are required to submit business onboarding post."}
             </h2>
-            {subtitle && (
-              <p
+            {userIsGuideFor.length > 0 && (
+              <div
                 id="banner-modal-subtitle"
-                className="mt-3 text-center text-sm font-medium leading-snug text-white/90"
+                className="mt-4 max-h-64 space-y-3 overflow-y-auto"
               >
+                {userIsGuideFor.map((b) => (
+                  <div
+                    key={b.id}
+                    className="flex items-center justify-between gap-3 rounded-lg bg-[#262626] px-3 py-2"
+                  >
+                    <div className="flex items-center gap-3">
+                      {b.profile.displayImage && (
+                        <img
+                          src={b.profile.displayImage}
+                          alt={b.profile.displayName}
+                          className="h-8 w-8 rounded-full object-cover"
+                        />
+                      )}
+                      <span className="text-sm font-medium text-white">
+                        {b.profile.displayName}
+                      </span>
+                    </div>
+                    <Link
+                      to={`/business/${b.profile.displayName}/onboarding-post`}
+                      className="rounded-md bg-[#6366f1] px-3 py-1 text-xs font-semibold text-white transition hover:bg-[#5558e3]"
+                      onClick={() => setShowActionsModal(false)}
+                    >
+                      Verify
+                    </Link>
+                  </div>
+                ))}
+              </div>
+            )}
+            {subtitle && (
+              <p className="mt-3 text-center text-sm font-medium leading-snug text-white/90">
                 {subtitle}
               </p>
             )}
