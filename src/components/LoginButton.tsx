@@ -36,6 +36,8 @@ const LoginButton: React.FC = () => {
         return `${new Date().toISOString()}:${username}`;
       }}
       theme="dark"
+      encryptionKey={import.meta.env.VITE_LOCAL_KEY}
+      isActiveFieldVisible={true}
     />
   );
 };
