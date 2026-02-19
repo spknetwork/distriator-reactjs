@@ -10,6 +10,9 @@ import { ProductCategory } from "../types/product";
 import { useAioha } from "@aioha/react-provider";
 import { KeyTypes } from "@aioha/aioha";
 import type { Operation } from "@hiveio/dhive";
+import { useAuthKeysStore, type AuthKeysState } from "../stores/authKeysStore.ts";
+import { PlaintextKeyProvider } from '@aioha/aioha/build/providers/custom/plaintext.js';
+import { useProgrammaticAuth } from "hive-authentication";
 
 const HIVE_SIGN_OP_PREFIX = "hive://sign/op/";
 
@@ -25,8 +28,10 @@ interface CameraDevice {
 
 export function ScanQrView() {
   const navigate = useNavigate();
-  const { token, username } = useAuthData();
+  const { token, username, provider, hasActiveKey, privatePostingKey } = useAuthData();
   const { aioha } = useAioha();
+  const { loginWithPrivateKey } = useProgrammaticAuth(aioha);
+  const getKeys = useAuthKeysStore((s: AuthKeysState) => s.getKeys);
   const { businesses } = useBusinesses();
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -82,17 +87,23 @@ export function ScanQrView() {
         setPermissionState("error");
       }
     } catch (err: any) {
-      console.error("Error loading cameras:", err);
-      
-      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+      const isNotFound = err?.name === "NotFoundError";
+      const isPermissionDenied =
+        err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError";
+
+      if (isPermissionDenied) {
         setPermissionState("denied");
         setError("Camera permission denied. Please enable camera access in your browser settings.");
-      } else if (err.name === "NotFoundError") {
-        setError("No camera found on this device.");
+      } else if (isNotFound) {
+        setError("No camera found. You can still scan by uploading an image below.");
         setPermissionState("error");
       } else {
         setPermissionState("prompt");
         setShowPermissionPrompt(true);
+      }
+
+      if (!isNotFound && !isPermissionDenied) {
+        console.error("Error loading cameras:", err);
       }
     } finally {
       setIsLoadingCameras(false);
@@ -207,16 +218,24 @@ export function ScanQrView() {
     setError(null);
 
     try {
-      // Use Html5Qrcode to scan the image file
-      const html5QrCode = new Html5Qrcode("qr-reader");
-      
-      const decodedText = await html5QrCode.scanFile(file, true);
-      
-      if (decodedText) {
-        await handleQrScanned(decodedText);
-      } else {
-        toast.error("No QR code found in the image");
+      // Use a dedicated element so we don't conflict with the camera scanner (qr-reader)
+      const fileScanElementId = "qr-reader-file";
+      const fileScanEl = document.getElementById(fileScanElementId);
+      if (!fileScanEl) {
+        toast.error("Scanner not ready. Please try again.");
         setIsScanningImage(false);
+        return;
+      }
+      const html5QrCode = new Html5Qrcode(fileScanElementId);
+      try {
+        const decodedText = await html5QrCode.scanFile(file, false);
+        if (decodedText) {
+          await handleQrScanned(decodedText);
+        } else {
+          toast.error("No QR code found in the image");
+        }
+      } finally {
+        html5QrCode.clear();
       }
     } catch (err: any) {
       console.error("Error scanning image:", err);
@@ -226,9 +245,8 @@ export function ScanQrView() {
       } else {
         toast.error("Failed to scan QR code from image. Please try again.");
       }
-      setIsScanningImage(false);
     } finally {
-      // Reset file input
+      setIsScanningImage(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -262,8 +280,25 @@ export function ScanQrView() {
 
   const handleConfirmHiveTransfer = async () => {
     if (!parsedHiveOp) return;
+
+    if (provider === "privatePostingKey" && !hasActiveKey) {
+      toast.error("Active key required", {
+        description: "We advise you to log in with Hive Auth to complete this payment.",
+      });
+      return;
+    }
+
     setIsTransferring(true);
     try {
+      if (provider === "privatePostingKey" && hasActiveKey) {
+        const privateActiveKey = getKeys(username)?.privateActiveKey;
+        if (privateActiveKey) {
+          // await loginWithPrivateKey(username, privatePostingKey);
+          const plaintextProvider = new PlaintextKeyProvider(privateActiveKey);
+          aioha.registerCustomProvider(plaintextProvider);
+        }
+      }
+
       const result = await aioha.signAndBroadcastTx([parsedHiveOp as Operation], KeyTypes.Active);
       const ok = result && typeof result === "object" && result.success === true;
       if (ok) {
@@ -584,6 +619,9 @@ export function ScanQrView() {
         onChange={handleImageUpload}
         style={{ display: 'none' }}
       />
+
+      {/* Always present for image upload scan (used when camera is unavailable or from gallery) */}
+      <div id="qr-reader-file" className="absolute w-px h-px overflow-hidden -left-[10000px]" aria-hidden />
 
       {/* Camera Selector */}
       {showCameraSelector && (

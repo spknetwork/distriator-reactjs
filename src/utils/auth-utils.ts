@@ -1,5 +1,7 @@
 import { useAuthStore, type LoggedInUser } from 'hive-authentication';
 import { RoleType } from '../types/role';
+import { useAuthKeysStore, type AuthKeysState } from '../stores/authKeysStore.ts';
+import type { HiveAuthUser } from '../context/AuthContext';
 
 /**
  * Utility functions for extracting authentication data from the hive-authentication store
@@ -7,19 +9,26 @@ import { RoleType } from '../types/role';
 
 export const useAuthData = () => {
   const { currentUser } = useAuthStore();
-  
+  const username = currentUser?.username || '';
+  const authKeys = useAuthKeysStore((s: AuthKeysState) => s.keysByUser[username]);
+
   const serverResponse = currentUser?.serverResponse;
   const token = serverResponse ? JSON.parse(serverResponse)['token'] : '';
   const typeString = serverResponse ? JSON.parse(serverResponse)['type'] : '';
   const type = typeString as RoleType;
-  const username = currentUser?.username || '';
-  
+  const provider = (currentUser as HiveAuthUser | undefined)?.provider ?? '';
+  const hasActiveKey = authKeys?.hasActiveKey ?? false;
+  const privatePostingKey = authKeys?.privatePostingKey ?? '';
   return {
     currentUser,
     token,
     type,
     username,
-    isAuthenticated: !!currentUser && !!token
+    serverResponse: currentUser?.serverResponse ?? '',
+    provider,
+    hasActiveKey,
+    isAuthenticated: !!currentUser && !!token,
+    privatePostingKey,
   };
 };
 
