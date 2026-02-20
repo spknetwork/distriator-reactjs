@@ -280,6 +280,7 @@ export function ScanQrView() {
     setIsTransferring(true);
     try {
       haAuthStore.switchToActiveForCurrentUser();
+      await new Promise(resolve => setTimeout(resolve, 300));
       const result = await aioha.signAndBroadcastTx([parsedHiveOp as Operation], KeyTypes.Active);
       haAuthStore.switchToPostingForCurrentUser();
       const ok = result && typeof result === "object" && result.success === true;
