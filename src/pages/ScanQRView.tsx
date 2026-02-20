@@ -1,12 +1,21 @@
 import { useState, useEffect, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import { Html5Qrcode } from "html5-qrcode";
-import { ArrowLeft, Camera, AlertCircle, RefreshCw, ChevronDown, Upload } from "lucide-react";
+import { ArrowLeft, Camera, AlertCircle, RefreshCw, ChevronDown, Upload, Loader2, Check } from "lucide-react";
 import { toast } from "sonner";
 import { CartService } from "../services/cart-service";
 import { useAuthData } from "../utils/auth-utils";
 import { useBusinesses } from "../hooks/useBusinesses";
 import { ProductCategory } from "../types/product";
+import { useAioha } from "@aioha/react-provider";
+import { KeyTypes } from "@aioha/aioha";
+import type { Operation } from "@hiveio/dhive";
+import { useAuthStore } from 'hive-authentication';
+
+const HIVE_SIGN_OP_PREFIX = "hive://sign/op/";
+
+/** Parsed Hive transfer op: [ "transfer", { from, to, amount, memo } ] */
+type HiveTransferOp = [string, { from: string; to: string; amount: string; memo: string }];
 
 type PermissionState = "checking" | "prompt" | "granted" | "denied" | "error";
 
@@ -17,7 +26,8 @@ interface CameraDevice {
 
 export function ScanQrView() {
   const navigate = useNavigate();
-  const { token } = useAuthData();
+  const { token, username } = useAuthData();
+  const { aioha } = useAioha();
   const { businesses } = useBusinesses();
   const scannerRef = useRef<Html5Qrcode | null>(null);
   const [isScanning, setIsScanning] = useState(false);
@@ -29,10 +39,12 @@ export function ScanQrView() {
   const [showCameraSelector, setShowCameraSelector] = useState(false);
   const [isLoadingCameras, setIsLoadingCameras] = useState(false);
   const [isScanningImage, setIsScanningImage] = useState(false);
+  const [parsedHiveOp, setParsedHiveOp] = useState<HiveTransferOp | null>(null);
+  const [isTransferring, setIsTransferring] = useState(false);
   const fileInputRef = useRef<HTMLInputElement>(null);
   const isScannedRef = useRef(false);
   const hasStartedRef = useRef(false);
-
+  const haAuthStore = useAuthStore();
   // Load available cameras
   const loadCameras = async () => {
     try {
@@ -71,17 +83,23 @@ export function ScanQrView() {
         setPermissionState("error");
       }
     } catch (err: any) {
-      console.error("Error loading cameras:", err);
-      
-      if (err.name === "NotAllowedError" || err.name === "PermissionDeniedError") {
+      const isNotFound = err?.name === "NotFoundError";
+      const isPermissionDenied =
+        err?.name === "NotAllowedError" || err?.name === "PermissionDeniedError";
+
+      if (isPermissionDenied) {
         setPermissionState("denied");
         setError("Camera permission denied. Please enable camera access in your browser settings.");
-      } else if (err.name === "NotFoundError") {
-        setError("No camera found on this device.");
+      } else if (isNotFound) {
+        setError("No camera found. You can still scan by uploading an image below.");
         setPermissionState("error");
       } else {
         setPermissionState("prompt");
         setShowPermissionPrompt(true);
+      }
+
+      if (!isNotFound && !isPermissionDenied) {
+        console.error("Error loading cameras:", err);
       }
     } finally {
       setIsLoadingCameras(false);
@@ -196,16 +214,24 @@ export function ScanQrView() {
     setError(null);
 
     try {
-      // Use Html5Qrcode to scan the image file
-      const html5QrCode = new Html5Qrcode("qr-reader");
-      
-      const decodedText = await html5QrCode.scanFile(file, true);
-      
-      if (decodedText) {
-        await handleQrScanned(decodedText);
-      } else {
-        toast.error("No QR code found in the image");
+      // Use a dedicated element so we don't conflict with the camera scanner (qr-reader)
+      const fileScanElementId = "qr-reader-file";
+      const fileScanEl = document.getElementById(fileScanElementId);
+      if (!fileScanEl) {
+        toast.error("Scanner not ready. Please try again.");
         setIsScanningImage(false);
+        return;
+      }
+      const html5QrCode = new Html5Qrcode(fileScanElementId);
+      try {
+        const decodedText = await html5QrCode.scanFile(file, false);
+        if (decodedText) {
+          await handleQrScanned(decodedText);
+        } else {
+          toast.error("No QR code found in the image");
+        }
+      } finally {
+        html5QrCode.clear();
       }
     } catch (err: any) {
       console.error("Error scanning image:", err);
@@ -215,9 +241,8 @@ export function ScanQrView() {
       } else {
         toast.error("Failed to scan QR code from image. Please try again.");
       }
-      setIsScanningImage(false);
     } finally {
-      // Reset file input
+      setIsScanningImage(false);
       if (fileInputRef.current) {
         fileInputRef.current.value = '';
       }
@@ -228,7 +253,74 @@ export function ScanQrView() {
     fileInputRef.current?.click();
   };
 
+  /** Parse hive://sign/op/<base64> into a transfer op and fill `from` with current user */
+  const parseHiveSignOp = (qrData: string): HiveTransferOp | null => {
+    if (!qrData.startsWith(HIVE_SIGN_OP_PREFIX)) return null;
+    const base64 = qrData.slice(HIVE_SIGN_OP_PREFIX.length).trim();
+    try {
+      const decoded = atob(base64);
+      const parsed = JSON.parse(decoded) as unknown;
+      if (!Array.isArray(parsed) || parsed.length < 2) return null;
+      const [opName, opBody] = parsed as [string, Record<string, string>];
+      if (opName !== "transfer" || !opBody || typeof opBody !== "object") return null;
+      const from = username || "";
+      const to = String(opBody.to ?? "").trim();
+      const amount = String(opBody.amount ?? "").trim();
+      const memo = String(opBody.memo ?? "").trim();
+      if (!to || !amount) return null;
+      return ["transfer", { from, to, amount, memo }];
+    } catch {
+      return null;
+    }
+  };
+
+  const handleConfirmHiveTransfer = async () => {
+    if (!parsedHiveOp) return;
+
+    setIsTransferring(true);
+    try {
+      haAuthStore.switchToActiveForCurrentUser();
+      await new Promise(resolve => setTimeout(resolve, 300));
+      const result = await aioha.signAndBroadcastTx([parsedHiveOp as Operation], KeyTypes.Active);
+      haAuthStore.switchToPostingForCurrentUser();
+      const ok = result && typeof result === "object" && result.success === true;
+      if (ok) {
+        toast.success("Payment sent", {
+          description: `Transfer of ${parsedHiveOp[1].amount} to @${parsedHiveOp[1].to} completed.`,
+        });
+        setParsedHiveOp(null);
+        navigate("/");
+      } else {
+        const errMsg = (result && typeof result === "object" && "error" in result && (result as { error: string }).error) ?? "Please try again.";
+        toast.error("Transfer failed", { description: errMsg });
+      }
+    } catch (e) {
+      toast.error("Transfer failed", {
+        description: e instanceof Error ? e.message : "Unknown error",
+      });
+    } finally {
+      setIsTransferring(false);
+    }
+  };
+
   const handleQrScanned = async (qrData: string) => {
+    // Hive sign/op transfer (v4v / Keychain-style QR)
+    if (qrData.startsWith(HIVE_SIGN_OP_PREFIX)) {
+      if (!username) {
+        toast.error("Please log in first to pay with Hive");
+        isScannedRef.current = false;
+        return;
+      }
+      const op = parseHiveSignOp(qrData);
+      if (!op) {
+        toast.error("Invalid Hive payment QR");
+        isScannedRef.current = false;
+        return;
+      }
+      setParsedHiveOp(op);
+      return;
+    }
+
     if (!qrData.startsWith("pos-")) {
       toast.error("Invalid QR code format");
       isScannedRef.current = false;
@@ -330,6 +422,127 @@ export function ScanQrView() {
     navigate(-1);
   };
 
+  // Hive transfer confirm screen (after scanning hive://sign/op/ QR)
+  if (parsedHiveOp) {
+    const [, op] = parsedHiveOp;
+    const fromAvatar = `https://images.hive.blog/u/${op.from}/avatar`;
+    const toAvatar = `https://images.hive.blog/u/${op.to}/avatar`;
+    const toProfileLink = `https://hive.blog/@${op.to}`;
+
+    return (
+      <div className="min-h-screen bg-background">
+        <div className="flex items-center justify-between p-4 border-b border-border bg-card">
+          <button
+            type="button"
+            onClick={() => setParsedHiveOp(null)}
+            className="p-2 bg-muted text-foreground rounded-full hover:bg-muted-foreground/20"
+          >
+            <ArrowLeft className="w-4 h-4" />
+          </button>
+          <h1 className="text-lg font-semibold text-foreground">Confirm Payment</h1>
+          <div className="w-10" />
+        </div>
+
+        <div className="p-4 max-w-md mx-auto space-y-6">
+          <div className="card bg-card border border-border rounded-xl p-6 shadow-md">
+            <p className="text-sm text-muted-foreground mb-3">You are paying</p>
+            <div className="flex items-center gap-4 mb-6">
+              <img
+                src={fromAvatar}
+                alt={`@${op.from}`}
+                className="w-14 h-14 rounded-full object-cover border-2 border-border"
+                onError={(e) => {
+                  (e.target as HTMLImageElement).src = "https://images.hive.blog/u/null/avatar";
+                }}
+              />
+              <div>
+                <p className="font-semibold text-foreground">@{op.from}</p>
+                <a
+                  href={`https://hive.blog/@${op.from}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-xs text-primary hover:underline"
+                >
+                  Profile (Hive)
+                </a>
+              </div>
+            </div>
+
+            <div className="border-t border-border pt-4 space-y-3">
+              <p className="text-sm text-muted-foreground">Transfer to</p>
+              <div className="flex items-center gap-4">
+                <img
+                  src={toAvatar}
+                  alt={`@${op.to}`}
+                  className="w-12 h-12 rounded-full object-cover border-2 border-border"
+                  onError={(e) => {
+                    (e.target as HTMLImageElement).src = "https://images.hive.blog/u/null/avatar";
+                  }}
+                />
+                <div>
+                  <a
+                    href={toProfileLink}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="font-semibold text-foreground hover:text-primary"
+                  >
+                    @{op.to}
+                  </a>
+                  <p className="text-xs text-muted-foreground">
+                    Avatar: <a href={toAvatar} target="_blank" rel="noopener noreferrer" className="text-primary hover:underline">Proxy link</a>
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="border-t border-border pt-4 mt-4 space-y-2">
+              <div className="flex justify-between text-sm">
+                <span className="text-muted-foreground">Amount</span>
+                <span className="font-semibold text-foreground">{op.amount}</span>
+              </div>
+              {op.memo && (
+                <div className="text-sm">
+                  <span className="text-muted-foreground">Memo</span>
+                  <p className="text-foreground mt-1 break-words">{op.memo}</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3">
+            <button
+              onClick={handleConfirmHiveTransfer}
+              disabled={isTransferring}
+              className="btn btn-success w-full flex items-center justify-center gap-2 py-3"
+            >
+              {isTransferring ? (
+                <>
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                  Confirm in wallet…
+                </>
+              ) : (
+                <>
+                  <Check className="w-5 h-5" />
+                  Confirm
+                </>
+              )}
+            </button>
+            <button
+              onClick={() => {
+                setParsedHiveOp(null);
+                isScannedRef.current = false;
+              }}
+              disabled={isTransferring}
+              className="btn btn-outline w-full"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -389,6 +602,9 @@ export function ScanQrView() {
         onChange={handleImageUpload}
         style={{ display: 'none' }}
       />
+
+      {/* Always present for image upload scan (used when camera is unavailable or from gallery) */}
+      <div id="qr-reader-file" className="absolute w-px h-px overflow-hidden -left-[10000px]" aria-hidden />
 
       {/* Camera Selector */}
       {showCameraSelector && (
