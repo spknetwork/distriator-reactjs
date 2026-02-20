@@ -1,7 +1,7 @@
 {
   "name": "distriator",
   "private": true,
-  "version": "0.0.80",
+  "version": "0.0.81",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -75,7 +75,7 @@
     "vite": "^7.0.4"
   },
   "deployment": {
-    "branch": "public-production",
-    "commitHash": "55daccd"
+    "branch": "feature/support-v4v-scanner",
+    "commitHash": "1df3e6a"
   }
 }
