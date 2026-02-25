@@ -855,7 +855,7 @@ export function ClaimScreen({
                           disabled={rating === 0 || reviewText.trim().length < 60 || isSubmitting || isCommentingOnSocial}
                           className="btn btn-success w-full disabled:opacity-50 disabled:cursor-not-allowed"
                         >
-                          Submit Review
+                          Submit Review & Earn Crypto
                         </button>
                         <button
                           onClick={handleNotNow}
@@ -869,9 +869,10 @@ export function ClaimScreen({
                       <>
                         <button
                           onClick={handleAddReview}
-                          className="btn btn-primary w-full"
+                          className="btn btn-primary w-full flex flex-col items-center gap-0.5 py-3 h-16 "
                         >
-                          Write Detailed Review
+                          <span>Write Detailed Review</span>
+                          <span className="text-xs font-medium opacity-90 animate-blink">Earn more Crypto</span>
                         </button>
                         <button
                           onClick={handleNotNow}
