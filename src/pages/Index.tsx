@@ -20,7 +20,7 @@ import { useBusinesses } from "../hooks/useBusinesses";
 import { QrCode, ShoppingCart, X } from "lucide-react";
 
 const Index = () => {
-  const { currentUser, token, type: userRole } = useAuthData();
+  const { currentUser, token, type: userRole, isWeb2User } = useAuthData();
   const navigate = useNavigate();
   const { fetchApprovedCount } = useCashbackStore();
   const { fetchPendingReviews } = usePendingReviewsStore();
@@ -75,18 +75,22 @@ const Index = () => {
           <div className="mt-6 flex flex-col sm:flex-row gap-3 justify-center items-center">
             {currentUser ? (
               <>
-                <button
-                  className="btn btn-success"
-                  onClick={() => navigate("/claim")}
-                >
-                  Claim now
-                </button>
-                <button
-                  className="btn btn-success"
-                  onClick={handleScanQr}
-                >
-                  Pay now
-                </button>
+                {!isWeb2User && (
+                  <>
+                    <button
+                      className="btn btn-success"
+                      onClick={() => navigate("/claim")}
+                    >
+                      Claim now
+                    </button>
+                    <button
+                      className="btn btn-success"
+                      onClick={handleScanQr}
+                    >
+                      Pay now
+                    </button>
+                  </>
+                )}
               </>
             ) : (
               <LoginButton />

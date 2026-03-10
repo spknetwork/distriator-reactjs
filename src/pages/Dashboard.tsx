@@ -7,7 +7,7 @@ import { ClaimScreen } from "../components/ClaimScreen";
 import { useAuthData } from '../utils/auth-utils';
 
 const Dashboard = () => {
-  const { currentUser, token, username } = useAuthData();
+  const { currentUser, token, username, isWeb2User } = useAuthData();
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -15,12 +15,17 @@ const Dashboard = () => {
       navigate("/");
       return;
     }
+
+    if (isWeb2User) {
+      navigate("/", { replace: true });
+      return;
+    }
     
     if (!token) {
       return;
     }
 
-  }, [currentUser, token, navigate]);
+  }, [currentUser, token, isWeb2User, navigate]);
 
   if (!token) {
     return (
@@ -33,6 +38,10 @@ const Dashboard = () => {
         </div>
       </CommonLayout>
     );
+  }
+
+  if (isWeb2User) {
+    return null;
   }
 
   return (
