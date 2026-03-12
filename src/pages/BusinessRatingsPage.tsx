@@ -1,6 +1,6 @@
 import { useEffect, useState, useRef } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { ArrowLeft, Star, Verified, AlertTriangle } from "lucide-react";
+import { ArrowLeft, Star, Verified, AlertTriangle, EyeOff } from "lucide-react";
 import { format } from "timeago.js";
 import { useBusinesses } from "../hooks/useBusinesses";
 import { useAioha } from "@aioha/react-provider";
@@ -37,6 +37,8 @@ const BusinessRatingsPage = () => {
     fetchFirstPage,
     reset,
     setReportedContent,
+    updateRatingVisibility,
+    updatingRatingIds,
   } = useBusinessRatingsStore();
 
   const { reportedUsers, reportedReviews, fetchReportedContent } = useReportedContentStore();
@@ -108,30 +110,36 @@ const BusinessRatingsPage = () => {
       isBusinessGuide ||
       isBusinessMainGuide);
 
+  const hasHideUnhidePermission =
+    username &&
+    (userRole === "admin" ||
+      userRole === "super" ||
+      isBusinessGuide ||
+      isBusinessMainGuide);
+
+  const refreshRatingSummary = async (signal?: AbortSignal) => {
+    if (!business?.id) return;
+    try {
+      const response =
+        await BusinessRatingSummaryService.getBusinessRatingSummary(
+          business.id,
+          signal
+        );
+      if (response.isSuccess && response.data) {
+        setRatingSummary(response.data);
+      }
+    } catch (error) {
+      if (!signal?.aborted) {
+        console.error("Error fetching rating summary:", error);
+      }
+    }
+  };
+
   useEffect(() => {
     if (!business) return;
 
     const abortController = new AbortController();
-
-    const fetchRatingSummary = async () => {
-      if (!business.id) return;
-      try {
-        const response =
-          await BusinessRatingSummaryService.getBusinessRatingSummary(
-            business.id,
-            abortController.signal
-          );
-        if (response.isSuccess && response.data) {
-          setRatingSummary(response.data);
-        }
-      } catch (error) {
-        if (!abortController.signal.aborted) {
-          console.error("Error fetching rating summary:", error);
-        }
-      }
-    };
-
-    fetchRatingSummary();
+    refreshRatingSummary(abortController.signal);
 
     return () => {
       abortController.abort();
@@ -448,26 +456,51 @@ const BusinessRatingsPage = () => {
 
           {!isLoadingRatings && (
             <div className="space-y-4 mt-2">
-              {ratings.map((rating, index) => (
+              {ratings
+                .filter((r) => !r.isHidden || hasHideUnhidePermission)
+                .map((rating, index) => (
                 <div
                   key={rating.id}
                   ref={index === ratings.length - 1 ? lastRatingRef : null}
-                  className={`bg-card rounded-lg border border-border p-4 transition-colors ${rating.ratingPermlink
+                  className={`relative bg-card rounded-lg border border-border p-4 transition-colors ${rating.ratingPermlink && !rating.isHidden
                     ? "cursor-pointer hover:bg-muted/50"
                     : ""
                     }`}
                   onClick={() => {
-                    if (!rating.ratingPermlink) return;
+                    if (rating.isHidden || !rating.ratingPermlink) return;
                     window.open(
                       `https://hive.blog/@${rating.ratingAuthor}/${rating.ratingPermlink}`,
                       "_blank"
                     );
                   }}
                 >
+                  {/* Hidden overlay for privileged users */}
+                  {hasHideUnhidePermission && rating.isHidden && (
+                    <div className="absolute inset-0 bg-gray-800 flex flex-col items-center justify-center rounded-lg z-10">
+                      <EyeOff className="w-8 h-8 text-muted-foreground mb-2" />
+                      <p className="text-sm font-semibold text-muted-foreground mb-2">
+                        Rating is hidden
+                      </p>
+                      <button
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          updateRatingVisibility(rating.id, false, token, refreshRatingSummary);
+                        }}
+                        disabled={updatingRatingIds.includes(rating.id)}
+                        className="bg-primary text-primary-foreground px-4 py-2 rounded text-sm hover:bg-primary/90 disabled:opacity-50"
+                      >
+                        {updatingRatingIds.includes(rating.id) ? 'Unhiding...' : 'Unhide'}
+                      </button>
+                      <p className="text-xs text-muted-foreground mt-2 text-center px-4">
+                        This rating is hidden & won't be shown to users
+                      </p>
+                    </div>
+                  )}
+
                   <div className="flex items-start justify-between mb-2">
                     <div className="flex items-start gap-2">
                       <img
-                        src={`https://images.hive.blog/u/${rating.ratingAuthor}/avatar`}
+                        src={rating.authorImageUrl || `https://images.hive.blog/u/${rating.ratingAuthor}/avatar`}
                         alt={rating.ratingAuthor}
                         className="w-12 h-12 rounded-full object-cover border border-border"
                       />
@@ -490,6 +523,19 @@ const BusinessRatingsPage = () => {
                     </div>
 
                     <div className="flex items-center gap-2">
+                      {/* Hide button for privileged users */}
+                      {hasHideUnhidePermission && !rating.isHidden && (
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            updateRatingVisibility(rating.id, true, token, refreshRatingSummary);
+                          }}
+                          disabled={updatingRatingIds.includes(rating.id)}
+                          className="text-sm text-destructive hover:text-destructive/80 disabled:opacity-50"
+                        >
+                          {updatingRatingIds.includes(rating.id) ? 'Hiding...' : 'Hide'}
+                        </button>
+                      )}
                       <span className="text-sm text-muted-foreground">
                         {format(rating.createdAt)}
                       </span>
