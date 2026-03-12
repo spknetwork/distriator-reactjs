@@ -3,12 +3,11 @@ import { useNavigate } from "react-router-dom";
 import {
   Edit,
   Trash2,
-  Ban,
   UserCheck,
   MapPin,
   Flag,
   MoreVertical,
-  Circle,
+  UserX,
 } from "lucide-react";
 import * as AlertDialog from "@radix-ui/react-alert-dialog";
 import * as DropdownMenu from "@radix-ui/react-dropdown-menu";
@@ -33,6 +32,21 @@ export const RoleTile: React.FC<RoleTileProps> = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [showBanDialog, setShowBanDialog] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
+  const source = [role.type, role.provider, role.authType, role.loginType]
+    .filter(Boolean)
+    .join(" ")
+    .toLowerCase();
+  const isWeb2User =
+    source.includes("web2") || source.includes("google") || source.includes("email");
+  const fallbackWeb2Avatar = `https://ui-avatars.com/api/?name=${encodeURIComponent(
+    role.username
+  )}&background=e5e7eb&color=111827`;
+  const avatarSrc = isWeb2User
+    ? role.profileImageUrl || fallbackWeb2Avatar
+    : `https://images.hive.blog/u/${role.username}/avatar`;
+  const avatarFallback = isWeb2User
+    ? fallbackWeb2Avatar
+    : "https://images.hive.blog/u/null/avatar";
 
   const handleEdit = () => {
     navigate(`/manage-users/${roleType}/edit/${role.username}`, {
@@ -67,9 +81,9 @@ export const RoleTile: React.FC<RoleTileProps> = ({
         title={role.banned ? "Unban User" : "Ban User"} // hover message
       >
         {role.banned ? (
-          <Ban className="w-4 h-4 text-red-500" />
+          <span className="text-green-500">Unban</span>
         ) : (
-          <Circle className="w-4 h-4 text-green-500" />
+          <span className="text-red-500">Ban</span>
         )}
       </button>
 
@@ -111,9 +125,9 @@ export const RoleTile: React.FC<RoleTileProps> = ({
             className="flex gap-2 items-center cursor-pointer py-2 px-3 hover:bg-base-200 rounded-md"
           >
             {role.banned ? (
-              <UserCheck className="w-4 h-4" />
+              <UserCheck className="w-4 h-4 text-green-500" />
             ) : (
-              <Ban className="w-4 h-4" />
+              <UserX className="w-4 h-4 text-red-500" />
             )}
             {role.banned ? "Unban" : "Ban"}
           </DropdownMenu.Item>
@@ -144,11 +158,11 @@ export const RoleTile: React.FC<RoleTileProps> = ({
         <div className="card-body p-4 flex flex-row items-center gap-4">
           {/* Avatar */}
           <img
-            src={`https://images.hive.blog/u/${role.username}/avatar`}
+            src={avatarSrc}
             alt={`${role.username} avatar`}
             className="w-12 h-12 rounded-full border-2 border-primary"
             onError={(e) => {
-              (e.currentTarget as HTMLImageElement).src = `https://images.hive.blog/u/null/avatar`;
+              (e.currentTarget as HTMLImageElement).src = avatarFallback;
             }}
           />
 

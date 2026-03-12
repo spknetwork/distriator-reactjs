@@ -35,6 +35,11 @@ export interface RoleModel {
   biWeeklyLimit?: number;
   city?: string;
   country?: string;
+  type?: string;
+  provider?: string;
+  authType?: string;
+  loginType?: string;
+  profileImageUrl?: string;
 }
 
 export interface RoleActionModel {
@@ -54,6 +59,11 @@ export function createRoleModel(json: any): RoleModel {
     biWeeklyLimit: json.biweekly,
     city: json.city,
     country: json.country,
+    type: json.type,
+    provider: json.provider,
+    authType: json.authType,
+    loginType: json.loginType,
+    profileImageUrl: json.profileImageUrl,
   };
 }
 
