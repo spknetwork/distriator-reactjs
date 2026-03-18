@@ -2,7 +2,7 @@
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
 import { useAioha } from "@aioha/react-provider";
-import { useProgrammaticAuth } from "hive-authentication";
+import { useProgrammaticAuth, useAuthStore } from "hive-authentication";
 const HD_API_SERVER = import.meta.env.VITE_HD_API_SERVER || 'https://beta-api.distriator.com';
 
 export default function AutoLogin() {
@@ -11,7 +11,14 @@ export default function AutoLogin() {
   const [status, setStatus] = useState("Initializing login...");
   const { aioha } = useAioha();
   const { loginWithPrivateKey } = useProgrammaticAuth(aioha);
+  const { setSecretKey, setAioha } = useAuthStore();
   const hasRun = useRef(false);
+
+  useEffect(() => {
+    const encryptionKey = import.meta.env.VITE_LOCAL_KEY || "";
+    setSecretKey(encryptionKey);
+    setAioha(aioha);
+  }, [aioha, setSecretKey, setAioha]);
 
   useEffect(() => {
     if (hasRun.current) return;
