@@ -1,6 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
-import { Plus, Search } from 'lucide-react';
+import { Filter, Plus, Search } from 'lucide-react';
 import { useRoleManagement } from '../../hooks/useRoleManagement';
 import { RoleType } from '../../types/role';
 import { RoleTile } from './RoleTile';
@@ -12,6 +12,9 @@ export const RoleView: React.FC = () => {
   const { roleType } = useParams<{ roleType: string }>();
   const navigate = useNavigate();
   const [searchTerm, setSearchTerm] = useState("");
+  const [authSourceFilter, setAuthSourceFilter] = useState<"all" | "hive" | "web2">("all");
+  const [banStatusFilter, setBanStatusFilter] = useState<"all" | "banned" | "unbanned">("all");
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
 
   const { token, type: userRoleType } = useAuthData();
 
@@ -35,6 +38,37 @@ export const RoleView: React.FC = () => {
     removeMember,
     banUnbanMember,
   } = useRoleManagement(token, roleTypeEnum, hasAccess);
+
+  const filteredBySegments = useMemo(() => {
+    if (roleTypeEnum !== RoleType.USER) {
+      return roles;
+    }
+
+    return roles.filter((role) => {
+      const source = [
+        role.type,
+        role.provider,
+        role.authType,
+        role.loginType,
+      ]
+        .filter(Boolean)
+        .join(" ")
+        .toLowerCase();
+
+      const isWeb2User = source.includes("web2") || source.includes("google") || source.includes("email");
+      const matchesAuthSource =
+        authSourceFilter === "all" ||
+        (authSourceFilter === "web2" && isWeb2User) ||
+        (authSourceFilter === "hive" && !isWeb2User);
+
+      const matchesBanStatus =
+        banStatusFilter === "all" ||
+        (banStatusFilter === "banned" && role.banned) ||
+        (banStatusFilter === "unbanned" && !role.banned);
+
+      return matchesAuthSource && matchesBanStatus;
+    });
+  }, [roles, roleTypeEnum, authSourceFilter, banStatusFilter]);
 
   const handleSearch = (value: string) => {
     setSearchTerm(value);
@@ -95,7 +129,7 @@ export const RoleView: React.FC = () => {
     <CommonLayout>
       <div className="max-w-7xl mx-auto m-0 px-4 sm:px-6 lg:px-8 pt-2">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
+        <div className="flex flex-wrap justify-between items-start md:items-center gap-4 mb-6">
           <div>
             <h1 className="text-3xl font-bold text-base-content">
               {getRoleName()}s
@@ -114,20 +148,89 @@ export const RoleView: React.FC = () => {
           </button>
         </div>
 
-        {/* Search Bar */}
-        <div className="flex items-center rounded-lg px-2 mb-6 border border-gray-300 dark:border-gray-700">
-          <Search className="w-5 h-5 text-gray-500 dark:text-gray-400" />
-          <input
-            type="text"
-            placeholder={
-              roleTypeEnum === RoleType.GUIDE
-                ? "Search name, city or country"
-                : "Search username"
-            }
-            value={searchTerm}
-            onChange={(e) => handleSearch(e.target.value)}
-            className="ml-2 bg-transparent px-2 py-2 text-sm text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none flex-1"
-          />
+        {/* Search + Filter */}
+        <div className="flex items-center gap-2 mb-6">
+          <div className="flex items-center rounded-lg px-2 border border-gray-300 dark:border-gray-700 flex-1">
+            <Search className="w-5 h-5 text-gray-500 dark:text-gray-400" />
+            <input
+              type="text"
+              placeholder={
+                roleTypeEnum === RoleType.GUIDE
+                  ? "Search name, city or country"
+                  : "Search username"
+              }
+              value={searchTerm}
+              onChange={(e) => handleSearch(e.target.value)}
+              className="ml-2 bg-transparent px-2 py-2 text-sm text-gray-800 dark:text-white placeholder-gray-400 focus:outline-none flex-1"
+            />
+          </div>
+
+          {roleTypeEnum === RoleType.USER && (
+            <div className="relative">
+              <button
+                type="button"
+                className="btn btn-outline btn-sm"
+                onClick={() => setIsFilterOpen((prev) => !prev)}
+                aria-label="Open user filters"
+              >
+                <Filter className="w-4 h-4" />
+              </button>
+
+              {isFilterOpen && (
+                <div className="absolute right-0 mt-2 w-80 bg-base-100 border border-base-300 rounded-lg shadow-lg p-4 z-10">
+                  <p className="text-sm font-semibold mb-2">User Source</p>
+                  <div className="flex flex-wrap gap-2 mb-4">
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${authSourceFilter === "hive" ? "btn-primary" : "btn-outline"}`}
+                      onClick={() => setAuthSourceFilter("hive")}
+                    >
+                      Hive Users
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${authSourceFilter === "web2" ? "btn-primary" : "btn-outline"}`}
+                      onClick={() => setAuthSourceFilter("web2")}
+                    >
+                      Web2 Users
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${authSourceFilter === "all" ? "btn-primary" : "btn-outline"}`}
+                      onClick={() => setAuthSourceFilter("all")}
+                    >
+                      All Users
+                    </button>
+                  </div>
+
+                  <p className="text-sm font-semibold mb-2">Ban Status</p>
+                  <div className="flex flex-wrap gap-2">
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${banStatusFilter === "banned" ? "btn-primary" : "btn-outline"}`}
+                      onClick={() => setBanStatusFilter("banned")}
+                    >
+                      Banned Users
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${banStatusFilter === "unbanned" ? "btn-primary" : "btn-outline"}`}
+                      onClick={() => setBanStatusFilter("unbanned")}
+                    >
+                      Unbanned Users
+                    </button>
+                    <button
+                      type="button"
+                      className={`btn btn-sm ${banStatusFilter === "all" ? "btn-primary" : "btn-outline"}`}
+                      onClick={() => setBanStatusFilter("all")}
+                    >
+                      All Statuses
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Content */}
@@ -154,9 +257,17 @@ export const RoleView: React.FC = () => {
           </div>
         )}
 
-        {viewState === ViewState.DATA && (
+        {viewState === ViewState.DATA && filteredBySegments.length === 0 && (
+          <div className="text-center py-12">
+            <p className="text-base-content/60">
+              No {getRoleName().toLowerCase()}s found for selected filters
+            </p>
+          </div>
+        )}
+
+        {viewState === ViewState.DATA && filteredBySegments.length > 0 && (
           <div className="space-y-4">
-            {roles.map((role, index) => (
+            {filteredBySegments.map((role, index) => (
               <RoleTile
                 key={`${role.username}-${roleTypeEnum}-${index}`}
                 role={role}

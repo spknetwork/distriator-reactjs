@@ -26,7 +26,7 @@ interface CameraDevice {
 
 export function ScanQrView() {
   const navigate = useNavigate();
-  const { token, username } = useAuthData();
+  const { token, username, isWeb2User } = useAuthData();
   const { aioha } = useAioha();
   const { businesses } = useBusinesses();
   const scannerRef = useRef<Html5Qrcode | null>(null);
@@ -45,6 +45,13 @@ export function ScanQrView() {
   const isScannedRef = useRef(false);
   const hasStartedRef = useRef(false);
   const haAuthStore = useAuthStore();
+
+  useEffect(() => {
+    if (!token || isWeb2User) {
+      navigate("/", { replace: true });
+    }
+  }, [token, isWeb2User, navigate]);
+
   // Load available cameras
   const loadCameras = async () => {
     try {

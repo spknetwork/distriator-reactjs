@@ -21,7 +21,7 @@ export function BusinessReviewsPhotos({
   const [currentPhotoIndex, setCurrentPhotoIndex] = useState<{ [key: string]: number }>({});
   const { currentUser } = useAuthContext();
 
-  const topReviews = reviews.slice(0, 10);
+  const topReviews = reviews.filter((r) => r.reviewStatus !== 'hidden').slice(0, 10);
 
   if (viewState === ViewState.LOADING) {
     return (

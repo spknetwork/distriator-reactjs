@@ -66,6 +66,20 @@ export function ClaimScreen({
   const [hbdAvailable, setHBDAvailable] = useState(false);
   const [showBusinessSelection, setShowBusinessSelection] = useState(false);
   const isMobile = isMobilePlatform();
+  const isRoomUser = (() => {
+    try {
+      const encoded = import.meta.env.VITE_ROOM_CREDENTIALS;
+      if (!encoded) return false;
+      const decoded = JSON.parse(
+        new TextDecoder().decode(
+          Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0))
+        )
+      );
+      return decoded.some((c: any) => c.username === username);
+    } catch {
+      return false;
+    }
+  })();
 
   useEffect(() => {
     const checkRatingInitially = async () => {
@@ -706,12 +720,12 @@ export function ClaimScreen({
             </div>
           </Card>)}
 
-          {!loading && (
+          {!loading && !isRoomUser && (
             <ClaimLevels biweeklyCount={claimData?.biweekly?.length || 0} />
           )}
 
           {/* Claim Statistics */}
-          {!loading && (
+          {!loading && !isRoomUser && (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
 
               <Card>

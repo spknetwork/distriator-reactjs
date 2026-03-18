@@ -13,12 +13,15 @@ export const useAuthData = () => {
   const typeString = serverResponse ? JSON.parse(serverResponse)['type'] : '';
   const type = typeString as RoleType;
   const username = currentUser?.username || '';
+  const provider = (currentUser?.provider || '').toLowerCase();
+  const isWeb2User = !!provider && !provider.includes('hive');
   
   return {
     currentUser,
     token,
     type,
     username,
+    isWeb2User,
     isAuthenticated: !!currentUser && !!token
   };
 };

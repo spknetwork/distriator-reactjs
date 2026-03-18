@@ -1,4 +1,5 @@
 import { HashRouter, Routes, Route } from "react-router-dom";
+import { useAuthStore } from 'hive-authentication';
 import Index from "./pages/Index";
 import Dashboard from "./pages/Dashboard";
 import NotFound from "./pages/NotFound";
@@ -57,6 +58,9 @@ import SalesViewPage from "./pages/SalesView";
 import SalesDetailViewPage from "./pages/SalesDetailView";
 import SalesSelectPage from "./pages/SalesSelect";
 import Privacy from "./pages/Privacy";
+
+// Set encryption key at startup so the auth store can decrypt persisted users on any page
+useAuthStore.getState().setSecretKey(import.meta.env.VITE_LOCAL_KEY || '');
 
 const aioha = initAioha({
   hivesigner: {

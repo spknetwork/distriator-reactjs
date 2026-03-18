@@ -19,6 +19,9 @@ export interface BusinessRatingModel {
   createdAt: string;
   updatedAt: string;
   isDeleted: boolean;
+  isHidden: boolean;
+  authorImageUrl: string | null;
+  authorType?: string;
 }
 
 export interface BusinessRatingSubmitResponse {
@@ -82,6 +85,9 @@ export function createBusinessRatingModel(json: any): BusinessRatingModel {
     createdAt: json.createdAt || '',
     updatedAt: json.updatedAt || '',
     isDeleted: json.isDeleted || false,
+    isHidden: json.hidden || json.isHidden || false,
+    authorImageUrl: json.authorImageUrl || null,
+    authorType: json.authorType || undefined,
   };
 }
 
