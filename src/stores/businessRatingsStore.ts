@@ -14,6 +14,7 @@ interface BusinessRatingsState {
   currentAbortController: AbortController | null;
   reportedUsers: string[];
   reportedReviews: ReportedReview[];
+  updatingRatingIds: string[];
 
   setBusinessId: (businessId: string) => void;
   setReportedContent: (users: string[], reviews: ReportedReview[]) => void;
@@ -21,6 +22,7 @@ interface BusinessRatingsState {
   fetchFirstPage: (signal?: AbortSignal) => Promise<void>;
   fetchNextPage: (signal?: AbortSignal) => Promise<void>;
   setSortBy: (sortBy: 'newest' | 'oldest' | 'highest' | 'lowest') => void;
+  updateRatingVisibility: (ratingId: string, hide: boolean, token: string, onSuccess?: () => void) => Promise<void>;
   reset: () => void;
 }
 
@@ -35,6 +37,7 @@ export const useBusinessRatingsStore = create<BusinessRatingsState>((set, get) =
   currentAbortController: null,
   reportedUsers: [],
   reportedReviews: [],
+  updatingRatingIds: [],
 
   setBusinessId: (businessId: string) => {
     const { currentAbortController } = get();
@@ -160,6 +163,28 @@ export const useBusinessRatingsStore = create<BusinessRatingsState>((set, get) =
 
     const { fetchFirstPage } = get();
     fetchFirstPage();
+  },
+
+  updateRatingVisibility: async (ratingId: string, hide: boolean, token: string, onSuccess?: () => void) => {
+    set(state => ({ updatingRatingIds: [...state.updatingRatingIds, ratingId] }));
+
+    try {
+      const response = await BusinessRatingService.hideBusinessRating(token, ratingId, hide);
+      if (response.data) {
+        set(state => ({
+          ratings: state.ratings.map(r =>
+            r.id === ratingId ? { ...r, isHidden: hide } : r
+          ),
+        }));
+        onSuccess?.();
+      }
+    } catch (error) {
+      console.error('Error updating rating visibility:', error);
+    } finally {
+      set(state => ({
+        updatingRatingIds: state.updatingRatingIds.filter(id => id !== ratingId),
+      }));
+    }
   },
 
   reset: () => {

@@ -63,7 +63,7 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
     useState(false);
   const [userOwnsBusiness, setUserOwnsBusiness] = useState(false);
 
-  const { type: userRoleType, isAuthenticated, username } = useAuthData();
+  const { type: userRoleType, isAuthenticated, username, isWeb2User } = useAuthData();
   const { approvedCount } = useCashbackStore();
   const { pendingReviewsCount } = usePendingReviewsStore();
   const navigate = useNavigate();
@@ -393,8 +393,8 @@ export default function SidebarDrawer({ isOpen, onClose }: SidebarDrawerProps) {
               </Link>
             ))}
 
-            {/* Wallet Section - Only show when logged in */}
-            {isAuthenticated && walletItems.map((item) => (
+            {/* Wallet Section - Only show when logged in and not Web2 user */}
+            {isAuthenticated && !isWeb2User && walletItems.map((item) => (
               <Link
                 key={item.path}
                 to={item.path}

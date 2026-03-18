@@ -1,7 +1,7 @@
 {
   "name": "distriator",
   "private": true,
-  "version": "0.0.85",
+  "version": "0.0.87",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -34,7 +34,7 @@
     "crypto-js": "^4.2.0",
     "date-fns": "^4.1.0",
     "dayjs": "^1.11.13",
-    "hive-authentication": "^0.5.8",
+    "hive-authentication": "^1.0.0",
     "html-to-image": "^1.11.11",
     "html2canvas": "^1.4.1",
     "html5-qrcode": "^2.3.8",
@@ -75,7 +75,7 @@
     "vite": "^7.0.4"
   },
   "deployment": {
-    "branch": "public-production",
-    "commitHash": "c59cf78"
+    "branch": "feature/web2-login",
+    "commitHash": "db1d51f"
   }
 }

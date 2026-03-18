@@ -152,6 +152,121 @@ export class BusinessRatingService {
     }
   }
 
+  /**
+   * Submit a business rating for web2 users (simplified - no blockchain fields required)
+   */
+  static async submitWeb2BusinessRating(
+    token: string,
+    businessId: string,
+    rating: number,
+    ratingText: string,
+    signal?: AbortSignal
+  ): Promise<ActionSingleDataResponse<BusinessRatingSubmitResponse>> {
+    try {
+      const response = await fetch(`${HD_API_SERVER}/businessRatings`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': token,
+        },
+        body: JSON.stringify({
+          businessId,
+          rating,
+          ratingText,
+        }),
+        signal,
+      });
+
+      // Check for token expiration
+      const isTokenExpired = await handleTokenExpiration(response);
+      if (isTokenExpired) {
+        return createActionSingleResponse(
+          {
+            valid: false,
+            errorMessage: 'Token expired',
+            data: {} as BusinessRatingSubmitResponse,
+          },
+        );
+      }
+
+      if (response.ok) {
+        const data = await response.json();
+        return createActionSingleResponse(
+          {
+            valid: true,
+            errorMessage: '',
+            data: createBusinessRatingSubmitResponse(data),
+          },
+        );
+      } else {
+        const errorData = await response.json().catch(() => ({ message: 'Unknown error' }));
+        return createActionSingleResponse(
+          {
+            valid: false,
+            errorMessage: errorData.message || `HTTP ${response.status}: ${response.statusText}`,
+            data: {} as BusinessRatingSubmitResponse,
+          },
+        );
+      }
+    } catch (error) {
+      return createActionSingleResponse(
+        {
+          valid: false,
+          errorMessage: error instanceof Error ? error.message : 'Unknown error',
+          data: {} as BusinessRatingSubmitResponse,
+        },
+      );
+    }
+  }
+
+  static async hideBusinessRating(
+    token: string,
+    ratingId: string,
+    hide: boolean,
+    signal?: AbortSignal
+  ): Promise<ActionSingleDataResponse<boolean>> {
+    try {
+      const response = await fetch(`${HD_API_SERVER}/businessRatings/hide`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'authorization': token,
+        },
+        body: JSON.stringify({ ratingId, hide }),
+        signal,
+      });
+
+      const isTokenExpired = await handleTokenExpiration(response);
+      if (isTokenExpired) {
+        return createActionSingleResponse({
+          valid: false,
+          errorMessage: 'Token expired',
+          data: false,
+        });
+      }
+
+      if (response.ok) {
+        return createActionSingleResponse({
+          valid: true,
+          errorMessage: '',
+          data: true,
+        });
+      } else {
+        return createActionSingleResponse({
+          valid: false,
+          errorMessage: `HTTP ${response.status}: ${response.statusText}`,
+          data: false,
+        });
+      }
+    } catch (error) {
+      return createActionSingleResponse({
+        valid: false,
+        errorMessage: error instanceof Error ? error.message : 'Unknown error',
+        data: false,
+      });
+    }
+  }
+
   static async getBusinessRatings(
     businessId: string,
     page = 1,

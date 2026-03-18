@@ -70,7 +70,7 @@ export function BusinessRatings({ ratings, viewState, businessName }: BusinessRa
                 </button>
             </div>
             <div className="flex gap-4 overflow-x-auto pb-2">
-                {ratings.map((rating) => (
+                {ratings.filter((r) => !r.isHidden).map((rating) => (
                     (() => {
                         const peakdUrl = getPeakdRatingUrl(rating.ratingAuthor, rating.ratingPermlink);
                         const card = (
@@ -83,7 +83,7 @@ export function BusinessRatings({ ratings, viewState, businessName }: BusinessRa
                                 <div>
                                     <div className="flex items-center gap-2">
                                         <img
-                                            src={`https://images.hive.blog/u/${rating.ratingAuthor}/avatar`}
+                                            src={rating.authorImageUrl || `https://images.hive.blog/u/${rating.ratingAuthor}/avatar`}
                                             alt={rating.ratingAuthor}
                                             className="w-8 h-8 rounded-full border-2 border-white shadow-md"
                                         />
