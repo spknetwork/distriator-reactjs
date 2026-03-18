@@ -23,6 +23,7 @@ import { BusinessReviewsPhotos } from "../components/business/BusinessReviewsPho
 import { BusinessRatings } from "../components/business/BusinessRatings";
 import { toast } from "sonner";
 import { BusinessDeleteDialog } from "../components/business/BusinessDeleteDialogue";
+import { BusinessRatingDialog } from "../components/business/BusinessRatingDialog";
 import { useAuthData } from "../utils/auth-utils";
 import { BusinessRatingSummaryService } from "../services/business-rating-summary-service";
 import type { BusinessRatingSummaryResponse } from "../types/business-rating";
@@ -71,6 +72,7 @@ const BusinessDetail = () => {
   const { businesses, deleteBusiness, viewState } = useBusinesses();
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showRatingDialog, setShowRatingDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [isActionsMenuOpen, setIsActionsMenuOpen] = useState(false);
   const [ratingSummary, setRatingSummary] =
@@ -120,7 +122,7 @@ const BusinessDetail = () => {
 
 
   const { token, isAuthenticated } = useAuthData();
-
+  
   useEffect(() => {
     if (isAuthenticated && token) {
       fetchReportedContent(token);
@@ -323,6 +325,19 @@ const BusinessDetail = () => {
                         {hasOnboardingPost
                           ? "Update onboarding post"
                           : "Add Onboarding Post"}
+                      </button>
+                    )}
+                    {/* Rate this business - visible to all authenticated users */}
+                    {isAuthenticated && (
+                      <button
+                        onClick={() => {
+                          closeActionsMenu();
+                          setShowRatingDialog(true);
+                        }}
+                        className="w-full text-left px-4 py-2 hover:bg-muted text-foreground"
+                        role="menuitem"
+                      >
+                        Rate this business
                       </button>
                     )}
                     {/* Add review - visible to all users, no conditions */}
@@ -551,6 +566,13 @@ const BusinessDetail = () => {
         onConfirm={handleDelete}
         businessName={business.profile.displayName}
         isLoading={isDeleting}
+      />
+
+      <BusinessRatingDialog
+        isOpen={showRatingDialog}
+        onClose={() => setShowRatingDialog(false)}
+        business={business}
+        onRatingSubmitted={(summary) => setRatingSummary(summary)}
       />
     </div>
   );
