@@ -27,6 +27,7 @@ import { BusinessRatingDialog } from "../components/business/BusinessRatingDialo
 import { useAuthData } from "../utils/auth-utils";
 import { BusinessRatingSummaryService } from "../services/business-rating-summary-service";
 import type { BusinessRatingSummaryResponse } from "../types/business-rating";
+import { stripHiveImageProxy } from "../utils/image-url";
 
 const BusinessDetailSkeleton = () => (
   <div className="min-h-screen bg-background">
@@ -362,9 +363,9 @@ const BusinessDetail = () => {
           {/* Avatar with status badge */}
           <div className="relative">
             <img
-              src={`https://images.hive.blog/320x0/${business.profile.displayImage}`}
+              src={business.profile.displayImage ? stripHiveImageProxy(business.profile.displayImage) : ""}
               alt={business.profile.displayName}
-              className="w-20 max-h-20 rounded-full object-cover border border-border"
+              className="w-24 h-24 min-w-[96px] min-h-[96px] rounded-full object-cover border border-border"
             />
             {business.distriator.subscriptionStatus === "whitelisted" &&
               business.distriator.owner && (

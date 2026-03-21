@@ -6,6 +6,7 @@ import { ViewState } from '../../types/enums';
 import { ThreeDotMenu } from '../ThreeDotMenu';
 import { useAuthContext } from '../../context/AuthContext';
 import { isIOS } from '../../utils/platform-detection';
+import { stripHiveImageProxy } from '../../utils/image-url';
 
 interface BusinessReviewsProps {
   reviews: BusinessReviewModel[];
@@ -147,7 +148,7 @@ export function BusinessReviews({
                     <div className="absolute inset-0 bg-muted animate-pulse rounded-lg"></div>
                   )}
                   <img
-                    src={`https://images.hive.blog/600x0/${review.photos[getCurrentPhotoIndex(review.id)]}`}
+                    src={stripHiveImageProxy(review.photos[getCurrentPhotoIndex(review.id)])}
                     alt="Review photo"
                     className={`w-full h-50 object-cover rounded-lg transition-opacity duration-300 ${loadedPhotos[review.id] ? 'opacity-100' : 'opacity-0'
                       }`}

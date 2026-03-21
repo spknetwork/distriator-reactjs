@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { type BusinessModel } from "../../types/business";
 import { getCache, setCache } from "../../utils/cache";
 import { Skeleton } from "@radix-ui/themes";
+import { stripHiveImageProxy } from "../../utils/image-url";
 
 interface BusinessPhotoGalleryProps {
   business: BusinessModel;
@@ -53,7 +54,7 @@ export function BusinessPhotoGallery({ business }: BusinessPhotoGalleryProps) {
             )}
 
             <img
-              src={`https://images.hive.blog/600x0/${image}`}
+              src={stripHiveImageProxy(image)}
               alt={`Business photo ${index + 1}`}
               className={`w-full h-full object-cover transition-opacity duration-300 ${loadedImages[index] ? "opacity-100" : "opacity-0"
                 }`}
@@ -72,7 +73,7 @@ export function BusinessPhotoGallery({ business }: BusinessPhotoGalleryProps) {
         >
           <div className="relative max-w-4xl max-h-full">
             <img
-              src={`https://images.hive.blog/600x0/${images[selectedImageIndex]}`}
+              src={stripHiveImageProxy(images[selectedImageIndex])}
               alt="Full size"
               className="max-w-full max-h-full object-contain"
             />

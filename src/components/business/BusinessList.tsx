@@ -9,6 +9,7 @@ import { ViewState } from "../../types/enums";
 import type { BusinessModel } from "../../types/business";
 import { useUnverifiedClaimsStore } from "../../stores/unverifiedClaimsStore";
 import { isMobilePlatform } from "../../utils/platform-detection";
+import { stripHiveImageProxy } from "../../utils/image-url";
 
 export default function BusinessList() {
   const {
@@ -607,7 +608,7 @@ export default function BusinessList() {
             >
               {biz.profile.displayImage ? (
                 <img
-                  src={`https://images.hive.blog/320x0/${biz.profile.displayImage}`}
+                  src={stripHiveImageProxy(biz.profile.displayImage)}
                   alt={biz.profile.displayName}
                   className="w-16 h-16 rounded-md object-cover"
                 />

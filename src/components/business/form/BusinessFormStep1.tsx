@@ -6,6 +6,7 @@ import { ImageUploadPreview } from "./ImageUploadPreview";
 import type { BusinessFormData } from "../../../types/business-form-data";
 import { useBusinessTypesStore } from "../../../stores/businessTypesStore";
 import { BusinessDropdown } from "./BusinessDropdown";
+import { stripHiveImageProxy } from "../../../utils/image-url";
 
 interface BusinessFormStep1Props {
   formData: any;
@@ -66,14 +67,14 @@ export function BusinessFormStep1({ formData, updateFormData, onValidationChange
       <ImageUploadPreview
         title="Display Image"
         isSingle={true}
-        images={formData.displayImage ? [formData.displayImage] : []}
+        images={formData.displayImage ? [stripHiveImageProxy(formData.displayImage)] : []}
         onChanged={(images) => updateFormData("displayImage", images[0] || "")}
       />
 
       <ImageUploadPreview
         title="Business Images"
         isSingle={false}
-        images={formData.images}
+        images={formData.images.map((img: string) => stripHiveImageProxy(img))}
         onChanged={(images) => updateFormData("images", images)}
       />
 

@@ -5,6 +5,7 @@ import { formatDistanceToNow } from 'date-fns';
 import { ApiService } from '../services/api';
 import { createBusinessReviewModel } from '../types/business-review';
 import type { BusinessReviewModel } from '../types/business-review';
+import { stripHiveImageProxy } from '../utils/image-url';
 
 interface PreviewImage {
   reviewId: string;
@@ -223,7 +224,7 @@ export function RecentReviews() {
                   <div className="absolute inset-0 bg-muted animate-pulse rounded-lg"></div>
                 )}
                 <img
-                  src={`https://images.hive.blog/600x0/${review.photos[getCurrentPhotoIndex(review.id)]}`}
+                  src={stripHiveImageProxy(review.photos[getCurrentPhotoIndex(review.id)])}
                   alt="Review photo"
                   className={`w-full h-48 object-cover rounded-lg transition-opacity duration-300 cursor-pointer ${
                     loadedPhotos[review.id] ? 'opacity-100' : 'opacity-0'
@@ -324,7 +325,7 @@ export function RecentReviews() {
                 <div className="absolute inset-0 bg-muted animate-pulse rounded-lg"></div>
               )}
               <img
-                src={`https://images.hive.blog/2000x0/${previewImage.photos[previewImage.photoIndex]}`}
+                src={`${previewImage.photos[previewImage.photoIndex]}`}
                 alt="Review photo preview"
                 className={`max-w-full max-h-full object-contain rounded-lg transition-opacity duration-300 ${
                   previewImageLoaded ? 'opacity-100' : 'opacity-0'
@@ -335,7 +336,7 @@ export function RecentReviews() {
                   console.error('Failed to load preview image:', previewImage.photos[previewImage.photoIndex]);
                   // Try alternative URL format without size constraint
                   const photoUrl = previewImage.photos[previewImage.photoIndex];
-                  (e.target as HTMLImageElement).src = `https://images.hive.blog/${photoUrl}`;
+                  (e.target as HTMLImageElement).src = `${photoUrl}`;
                 }}
               />
             </div>

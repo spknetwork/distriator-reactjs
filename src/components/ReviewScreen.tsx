@@ -10,6 +10,7 @@ import type { BusinessModel, ReviewField } from "../types/business";
 import { BusinessReviewService } from "../services/business-review-service";
 import { useAuthData } from '../utils/auth-utils';
 import { isMobilePlatform } from "../utils/platform-detection";
+import { stripHiveImageProxy } from "../utils/image-url";
 
 export function ReviewScreen() {
   const navigate = useNavigate();
@@ -257,7 +258,7 @@ export function ReviewScreen() {
   const _commentMetaData = () => {
     return `
 Business name: [${business?.profile.displayName
-      }](https://distriator.com/#/businesses/${encodeURIComponent(
+      }](https://distriator.com/#/business/${encodeURIComponent(
         business?.profile.displayName || ""
       )})
 [Open SpendHBD Business Page](${business?.distriator.spendHbdLink || ""})
@@ -323,7 +324,7 @@ To benefit from Distriator and receive discounts on your Hive Dollars purchases:
           <div className="flex items-center gap-3 bg-background/90 text-foreground px-5 py-4 rounded-lg shadow-xl border border-border">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span>
-              {isClaiming ? "Submitting business review... Please wait" : isMobile ? "Go to keychain & approve the request to submit business review" :  "Posting business review... Please wait"}
+              {isClaiming ? "Submitting business review... Please wait" : "Go to keychain & approve the request to submit business review"}
             </span>
           </div>
         </div>
@@ -331,7 +332,7 @@ To benefit from Distriator and receive discounts on your Hive Dollars purchases:
       {requiresServerQuestion && serverQuestionOpen && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80">
           <div className="bg-background text-foreground rounded-lg shadow-2xl border border-border max-w-lg w-full mx-8 p-6 space-y-4">
-            <img src={business?.profile.displayImage} alt={business?.profile.displayName} className="w-16 h-16 rounded-full object-cover border-2 border-primary shadow-md mx-auto" />
+            <img src={business?.profile.displayImage ? stripHiveImageProxy(business.profile.displayImage) : ""} alt={business?.profile.displayName} className="w-16 h-16 rounded-full object-cover border-2 border-primary shadow-md mx-auto" />
             <h1 className="text-2xl font-bold text-center">Rate the person who served you at {business?.profile.displayName}</h1>
             <h3 className="text-md font-semibold text-center">Does he/she have hive-username?</h3>
             <div className="flex gap-3 justify-center">
@@ -476,7 +477,7 @@ To benefit from Distriator and receive discounts on your Hive Dollars purchases:
           <Card className="p-6 bg-gradient-to-br from-primary/10 to-primary/5 border border-primary/20 rounded-lg">
             <div className="flex items-center space-x-4">
               <img
-                src={business.profile.displayImage}
+                src={business.profile.displayImage ? stripHiveImageProxy(business.profile.displayImage) : ""}
                 alt={business.profile.displayName}
                 className="w-16 h-16 rounded-full object-cover border-2 border-primary shadow-md"
               />
@@ -733,6 +734,11 @@ To benefit from Distriator and receive discounts on your Hive Dollars purchases:
               ? "Posting business review..."
               : "Submit Review"}
         </button>
+        {isSubmitting && (
+          <div className="text-center text-blink-yellow mt-2">
+            Go to keychain & approve the request to submit business review
+          </div>
+        )}
 
         {/* Photo Preview */}
         <Card>

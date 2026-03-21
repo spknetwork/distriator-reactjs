@@ -17,7 +17,6 @@ import usePendingReviewsStore from "../stores/pendingReviewsStore";
 import { RoleType } from "../types/role";
 import { BusinessSelectionDialog } from "../components/business/BusinessSelectionDialog";
 import { useBusinesses } from "../hooks/useBusinesses";
-import { QrCode, ShoppingCart, X } from "lucide-react";
 
 const Index = () => {
   const { currentUser, token, type: userRole, isWeb2User } = useAuthData();
@@ -25,7 +24,6 @@ const Index = () => {
   const { fetchApprovedCount } = useCashbackStore();
   const { fetchPendingReviews } = usePendingReviewsStore();
   const { businesses } = useBusinesses();
-  const [showPayClaimDialog, setShowPayClaimDialog] = useState(false);
   const [showBusinessSelection, setShowBusinessSelection] = useState(false);
 
   // Determine which text content to show based on platform
@@ -50,7 +48,6 @@ const Index = () => {
   // };
 
   const handleScanQr = () => {
-    setShowPayClaimDialog(false);
     navigate('/scan-qr');
   };
 
