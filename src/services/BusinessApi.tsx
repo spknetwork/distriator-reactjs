@@ -114,8 +114,8 @@ export const uploadPlacesImageApi = async (imageUrl: string, token: string) => {
 };
 
 // Storage keys for caching
-const BUSINESSES_CACHE_KEY = "cached_businesses";
-const LAST_MODIFIED_TIMESTAMP_KEY = "last_modified_timestamp";
+const BUSINESSES_CACHE_KEY = "cached_businesses_data";
+const LAST_MODIFIED_TIMESTAMP_KEY = "last_modified_timestamp_new";
 const OLDEST_POSSIBLE_TIMESTAMP = "1970-01-01T00:00:00.000Z";
 
 // Interface for the API response

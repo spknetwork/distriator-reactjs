@@ -1,5 +1,5 @@
 // utils/cache.ts
-const CACHE_PREFIX = "business_reviews_";
+const CACHE_PREFIX = "business_reviews_new_";
 const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
 
 interface CacheItem<T> {

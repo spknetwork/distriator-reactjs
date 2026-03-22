@@ -122,7 +122,7 @@ const PendingCashbackDetail = ({
           <div className="flex items-center gap-4">
             {business.profile?.displayImage && (
               <img
-                src={`https://images.hive.blog/320x0/${business.profile.displayImage}`}
+                src={`${business.profile.displayImage}`}
                 alt={business.profile.displayName}
                 className="w-16 h-16 rounded-lg object-cover"
               />

@@ -210,7 +210,7 @@ export default function AddReviewPage() {
           {/* Business Display Image with Status Badge */}
           <div className="relative flex-shrink-0">
             <img
-              src={`https://images.hive.blog/320x0/${business.profile.displayImage}`}
+              src={`${business.profile.displayImage}`}
               alt={business.profile.displayName}
               className="w-12 h-12 rounded-full object-cover border border-border"
             />

@@ -38,16 +38,6 @@ const generateStarEmojis = (rating: number) => {
   return "⭐".repeat(rating);
 };
 
-const pickBusinessImage = (biz: BusinessModel, sizePrefix = "https://images.hive.blog/320x0/") => {
-  const images = Array.isArray(biz.profile.images) ? biz.profile.images : [];
-  const displayImage = biz.profile.displayImage;
-  const candidates = [...images, displayImage].filter(Boolean) as string[];
-  if (candidates.length === 0) return null;
-  const raw = candidates[Math.floor(Math.random() * candidates.length)];
-  if (!raw) return null;
-  if (/^https?:\/\//i.test(raw)) return raw;
-  return `${sizePrefix}${raw}`;
-};
 
 export const BusinessRatingDialog = ({
   isOpen,
@@ -139,7 +129,7 @@ export const BusinessRatingDialog = ({
           try {
             const stars = generateStarEmojis(rating);
             const ratingCommentPermlink = generateRandomString(8);
-            const randomBusinessImage = pickBusinessImage(business);
+            const randomBusinessImage = business.profile.displayImage;
             const encodedBusinessName = encodeURIComponent(business.profile.displayName);
             const distriatorRatingLink = `https://distriator.com/#/ratings/${encodedBusinessName}`;
             const ratingCommentUrl = `https://hive.blog/@${user}/${ratingCommentPermlink}`;
@@ -248,7 +238,7 @@ export const BusinessRatingDialog = ({
 
   if (!isOpen) return null;
 
-  const businessImage = pickBusinessImage(business) || "https://images.hive.blog/u/null/avatar";
+  const businessImage = business.profile.displayImage || "https://images.hive.blog/u/null/avatar";
 
   return (
     <div className="fixed inset-0 bg-black/40 bg-opacity-50 flex items-center justify-center z-50">

@@ -30,7 +30,7 @@ The new system implements a timestamp-based caching strategy:
 
 ### 4. Local Storage Keys
 - `cached_businesses`: Encrypted business data
-- `last_modified_timestamp`: ISO8601 timestamp of last modification
+- `last_modified_timestamp_new`: ISO8601 timestamp of last modification
 
 ### 5. Data Safety
 - Business data is stored encrypted in localStorage using the same encryption key

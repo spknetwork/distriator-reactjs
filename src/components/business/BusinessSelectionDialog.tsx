@@ -77,7 +77,7 @@ export function BusinessSelectionDialog({
                       <img
                         src={
                           business.profile.displayImage
-                            ? `https://images.hive.blog/320x0/${business.profile.displayImage}`
+                            ? `${business.profile.displayImage}`
                             : "https://images.hive.blog/u/null/avatar"
                         }
                         alt={business.profile.displayName}

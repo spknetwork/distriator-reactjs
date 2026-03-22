@@ -20,7 +20,7 @@ const ThisMonthClaims = ({
         );
         if (filteredItems.length > 0) {
             return (
-                `https://images.hive.blog/320x0/${filteredItems[0].profile?.displayImage }`||
+                `${filteredItems[0].profile?.displayImage }`||
                 "https://images.hive.blog/u/null/avatar"
             );
         } else {

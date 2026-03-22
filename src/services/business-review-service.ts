@@ -136,9 +136,9 @@ export class BusinessReviewService {
   }
 
   // ===== Business History Caching (similar to BusinessApi) =====
-  private static readonly HISTORY_CACHE_KEY_PREFIX = "cached_business_history_";
-  private static readonly HISTORY_LAST_MODIFIED_PREFIX = "last_modified_timestamp_business_history_";
-  private static readonly HISTORY_FETCHED_AT_PREFIX = "fetched_at_business_history_";
+  private static readonly HISTORY_CACHE_KEY_PREFIX = "cached_business_history_new_";
+  private static readonly HISTORY_LAST_MODIFIED_PREFIX = "last_modified_timestamp_business_history_new_";
+  private static readonly HISTORY_FETCHED_AT_PREFIX = "fetched_at_business_history_new_";
   private static readonly OLDEST_TS = OLDEST_POSSIBLE_TIMESTAMP;
 
   private static getCachedBusinessHistory(businessUserName: string): BusinessHistoryModel[] {

@@ -213,7 +213,7 @@ export function ImageUploadPreview({
         resizedFile,
         token
       );
-      const fullUrl = `https://images.hive.blog/600x0/${uploadedUrl}`;
+      const fullUrl = `${uploadedUrl}`;
 
       setImageModels(prev =>
         prev.map(model =>

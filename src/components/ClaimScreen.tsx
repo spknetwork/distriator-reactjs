@@ -24,6 +24,7 @@ import { parseSocialUrl } from "../utils/social-url-parser";
 import { DhiveService } from "../services/dhive-service";
 import { BusinessSelectionDialog } from "./business/BusinessSelectionDialog";
 import { isMobilePlatform } from "../utils/platform-detection";
+import { stripHiveImageProxy } from "../utils/image-url";
 
 dayjs.extend(relativeTime);
 
@@ -318,18 +319,6 @@ export function ClaimScreen({
     return "⭐".repeat(rating);
   };
 
-  const pickBusinessImage = (biz?: BusinessModel | null, sizePrefix = "https://images.hive.blog/0x0/") => {
-    if (!biz) return null;
-    const images = Array.isArray(biz.profile.images) ? biz.profile.images : [];
-    const displayImage = biz.profile.displayImage;
-    const candidates = [...images, displayImage].filter(Boolean) as string[];
-    if (candidates.length === 0) return null;
-    const raw = candidates[Math.floor(Math.random() * candidates.length)];
-    if (!raw) return null;
-    if (/^https?:\/\//i.test(raw)) return raw;
-    return `${sizePrefix}${raw}`;
-  };
-
   const handleSubmitReview = async () => {
     if (rating === 0) {
       toast.error("Please select a rating");
@@ -369,7 +358,7 @@ export function ClaimScreen({
             const stars = generateStarEmojis(rating);
             const timestamp = claim.timestamp ? new Date(claim.timestamp + (String(claim.timestamp).endsWith("Z") ? "" : "Z")).toISOString() : new Date().toISOString();
             const invoice = claim.invoice || "";
-            const randomBusinessImage = pickBusinessImage(selectedBusiness);
+            const randomBusinessImage = selectedBusiness.profile.displayImage;
             const encodedBusinessName = encodeURIComponent(selectedBusiness.profile.displayName);
             const distriatorRatingLink = `https://distriator.com/#/ratings/${encodedBusinessName}`;
             const claimPermlink = (claim as any)?.permlink as string | undefined;
@@ -590,7 +579,7 @@ export function ClaimScreen({
                           );
                           const businessName = business?.profile?.displayName || currentClaim?.business || "Unknown Business";
                           const businessImage = business?.profile?.displayImage
-                            ? `https://images.hive.blog/320x0/${business.profile.displayImage}`
+                            ? stripHiveImageProxy(business.profile.displayImage)
                             : "https://images.hive.blog/u/null/avatar";
 
                           return (
@@ -774,7 +763,8 @@ export function ClaimScreen({
                 <div className="flex flex-col items-center space-y-4">
                   {/* Business Image */}
                   {(() => {
-                    const img = pickBusinessImage(selectedBusiness, "https://images.hive.blog/320x0/");
+                    const img = selectedBusiness?.profile?.displayImage ? stripHiveImageProxy(selectedBusiness.profile.displayImage)
+                      : "https://images.hive.blog/u/null/avatar";
                     const fallback = "https://images.hive.blog/u/null/avatar";
                     return (
                       <img
@@ -854,7 +844,7 @@ export function ClaimScreen({
                       </span>
                     </div>
                   )}
-                  {isMobile && isSubmitting && (
+                  {isSubmitting && (
                     <div className="text-center text-blink-yellow">
                       Go to keychain & approve the request
                     </div>

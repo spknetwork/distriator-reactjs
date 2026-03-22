@@ -169,6 +169,10 @@ const App = () => {
                 element={<BusinessDetail />}
               />
               <Route
+                path="/businesses/:businessName"
+                element={<BusinessDetail />}
+              />
+              <Route
                 path="/ratings/:businessName"
                 element={<BusinessRatingsPage />}
               />
