@@ -4,6 +4,7 @@ import { useBusinessesStore } from '../stores/businessesStore';
 import { useAuthData } from '../utils/auth-utils';
 import { ViewState } from '../types/enums';
 import { BusinessReviewService } from '../services/business-review-service';
+import { clearBusinessesCache } from '../services/BusinessApi';
 
 export const useBusinesses = () => {
   const { token } = useAuthData();
@@ -12,6 +13,8 @@ export const useBusinesses = () => {
   const refreshBusinesses = useCallback(async (signal?: AbortSignal) => {
     store.setViewState(ViewState.LOADING);
     try {
+      // Clear cache so we do a full refetch from the server
+      clearBusinessesCache();
       const data = await store.fetchBusinesses(signal);
       store.setBusinessData(data);
     } catch (error: any) {

@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { AlertTriangle, X } from 'lucide-react';
 
 interface BusinessConfirmationDialogProps {
@@ -18,6 +19,16 @@ export const BusinessConfirmationDialog: React.FC<BusinessConfirmationDialogProp
 }) => {
   const [countdown, setCountdown] = useState(5);
   const [canConfirm, setCanConfirm] = useState(false);
+
+  // Lock body scroll when dialog is open
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => { document.body.style.overflow = ''; };
+  }, [isOpen]);
 
   useEffect(() => {
     if (isOpen) {
@@ -46,10 +57,10 @@ export const BusinessConfirmationDialog: React.FC<BusinessConfirmationDialogProp
       : ""
   }`;
 
-  return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-      <div className="bg-background rounded-2xl shadow-2xl w-full max-w-lg mx-4">
-        <div className="flex items-center justify-between p-6 border-b border-border">
+  return createPortal(
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+      <div className="bg-background rounded-2xl shadow-2xl w-full max-w-lg mx-4 max-h-[80vh] flex flex-col">
+        <div className="flex items-center justify-between p-6 border-b border-border shrink-0">
           <h2 className="text-xl font-semibold text-foreground flex items-center gap-2">
             <AlertTriangle className="w-5 h-5 text-amber-500" />
             Verification Confirmation
@@ -62,8 +73,7 @@ export const BusinessConfirmationDialog: React.FC<BusinessConfirmationDialogProp
             <X className="w-5 h-5 text-muted-foreground" />
           </button>
         </div>
-        
-        <div className="p-6">
+        <div className="p-6 overflow-y-auto flex-1">
           <p className="text-sm text-foreground mb-6 leading-relaxed">
             {confirmationText}
           </p>
@@ -87,6 +97,7 @@ export const BusinessConfirmationDialog: React.FC<BusinessConfirmationDialogProp
           </div>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };

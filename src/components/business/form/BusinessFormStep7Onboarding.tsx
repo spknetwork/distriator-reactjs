@@ -9,6 +9,7 @@ import { useAuthData } from "../../../utils/auth-utils";
 import { ApiService } from "../../../services/api";
 import { DhiveService } from "../../../services/dhive-service";
 import { toast } from "sonner";
+import { stripHiveImageProxy } from "../../../utils/image-url";
 import { useBusinesses } from "../../../hooks/useBusinesses";
 import { BusinessConfirmationDialog } from "./BusinessConfirmationDialogue";
 
@@ -226,7 +227,7 @@ export function BusinessFormStep7Onboarding({ businessData, isMini, onPrevious, 
         onCompleted();
       } else {
         await createBusiness(updatedBusiness, isMini);
-        toast.success("Business created with onboarding post");
+        // toast.success("Business created with onboarding post");
         onCompleted();
       }
     } catch (e) {
@@ -288,7 +289,7 @@ export function BusinessFormStep7Onboarding({ businessData, isMini, onPrevious, 
       <div className="p-6 bg-background/50 border border-border/50 rounded-lg">
         {(!isMini || isOnboardingOnly) && (
           <div className="mb-4 flex items-center gap-4 justify-center">
-          <img src={businessData.profile.displayImage} alt="Onboarding" className="rounded-lg w-10 h-10 object-cover" />
+          <img src={stripHiveImageProxy(businessData.profile.displayImage || "")} alt="Onboarding" className="rounded-lg w-10 h-10 object-cover" />
           <p className="text-2xl font-semibold">
             {businessData.profile.displayName}
           </p>
