@@ -4,7 +4,7 @@ import { ArrowLeft, Upload, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiService } from "../services/api";
 import { BusinessReviewService } from "../services/business-review-service";
-import { Button, Card } from "@radix-ui/themes";
+import { Card } from "@radix-ui/themes";
 import { useAuthData } from "../utils/auth-utils";
 import { toast } from "sonner";
 import { isMobilePlatform } from "../utils/platform-detection";
@@ -262,7 +262,7 @@ export function PhotoUploadScreen() {
         )}
 
         {/* Upload Area */}
-        <Card>
+        <Card onClick={openCameraOrPicker} className="cursor-pointer">
           <div className="p-8 text-center bg-background/50 border-2 border-dashed border-border rounded-lg">
             <Upload className="h-12 w-12 text-primary mx-auto mb-4" />
             <h2 className="text-2xl font-bold text-foreground mb-2">
@@ -282,12 +282,9 @@ export function PhotoUploadScreen() {
               capture={allowGallery ? undefined : "environment" }
               onChange={handleFileChange}
             />
-            <Button
-              onClick={openCameraOrPicker}
-              className="cursor-pointer bg-success text-primary-foreground px-4 py-2 rounded-lg shadow-md hover:bg-success/90 transition-colors"
-            >
+            <div className="inline-block bg-green-600 text-white px-4 py-2 rounded-lg shadow-md pointer-events-none">
               {allowGallery ? "Choose Photos" : "Open Camera"}
-            </Button>
+            </div>
           </div>
         </Card>
 
