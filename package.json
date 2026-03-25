@@ -5,6 +5,7 @@
   "type": "module",
   "scripts": {
     "dev": "vite --host",
+    "dev:local": "vite --mode dev",
     "build": "vite build",
     "android": "npm run build && npx cap sync && npx cap run android",
     "ios": "npm run build && npx cap sync && npx cap run ios",
