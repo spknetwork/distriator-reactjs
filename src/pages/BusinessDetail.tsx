@@ -9,7 +9,7 @@ import {
   MoreVertical,
   Star,
 } from "lucide-react";
-import { useAioha } from "@aioha/react-provider";
+import { useAioha } from "@aioha/react-ui";
 import { useBusinesses } from "../hooks/useBusinesses";
 import { useBusinessReviews } from "../hooks/useBusinessReviews";
 import { useBusinessRatings } from "../hooks/useBusinessRatings";

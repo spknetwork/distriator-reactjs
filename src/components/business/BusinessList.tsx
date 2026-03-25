@@ -2,7 +2,7 @@ import { useBusinesses } from "../../hooks/useBusinesses";
 import { useNavigate, useLocation } from "react-router-dom";
 import React, { useState, useEffect, useMemo } from "react";
 import { ArrowLeft, Search, X, Plus, RefreshCw, MapPin, CheckCircle, AlertTriangle } from "lucide-react";
-import { useAioha } from "@aioha/react-provider";
+import { useAioha } from "@aioha/react-ui";
 import { BusinessCreateDialog } from "./BusinessCreateDialogue";
 import { useAuthData } from "../../utils/auth-utils";
 import { ViewState } from "../../types/enums";

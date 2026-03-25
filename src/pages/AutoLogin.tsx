@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAioha } from "@aioha/react-provider";
+import { useAioha } from "@aioha/react-ui";
 import { useProgrammaticAuth, useAuthStore } from "hive-authentication";
 const HD_API_SERVER = import.meta.env.VITE_HD_API_SERVER || 'https://beta-api.distriator.com';
 

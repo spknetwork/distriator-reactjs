@@ -19,7 +19,7 @@ import dayjs from "dayjs";
 import relativeTime from "dayjs/plugin/relativeTime";
 import CommonLayout from "./CommonLayout";
 import { ClaimLevels } from "./ClaimLevels";
-import { useAioha } from "@aioha/react-provider";
+import { useAioha } from "@aioha/react-ui";
 import { parseSocialUrl } from "../utils/social-url-parser";
 import { DhiveService } from "../services/dhive-service";
 import { BusinessSelectionDialog } from "./business/BusinessSelectionDialog";

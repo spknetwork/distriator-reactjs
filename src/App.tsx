@@ -37,7 +37,7 @@ import LocationPicker from "./components/business/form/LocationPicker";
 import BusinessFormView from "./components/business/form/BusinessFormView";
 
 import { initAioha } from "@aioha/aioha";
-import { AiohaProvider } from "@aioha/react-provider";
+import { AiohaProvider } from "@aioha/react-ui";
 import ClaimStatusScreen from "./components/CashbackStatus";
 import UserWallet from "./pages/UserWallet";
 import MapView from "./components/business/MapView";

@@ -7,7 +7,7 @@ import { CartService } from "../services/cart-service";
 import { useAuthData } from "../utils/auth-utils";
 import { useBusinesses } from "../hooks/useBusinesses";
 import { ProductCategory } from "../types/product";
-import { useAioha } from "@aioha/react-provider";
+import { useAioha } from "@aioha/react-ui";
 import { KeyTypes } from "@aioha/aioha";
 import type { Operation } from "@hiveio/dhive";
 import { useAuthStore } from 'hive-authentication';

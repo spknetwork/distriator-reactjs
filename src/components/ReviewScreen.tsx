@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { ArrowLeft, Loader2, Star } from "lucide-react";
-import { useAioha } from "@aioha/react-provider";
+import { useAioha } from "@aioha/react-ui";
 import { toast } from "sonner";
 import { useNavigate, useLocation } from "react-router-dom";
 import { ApiService } from "../services/api";
@@ -11,11 +11,13 @@ import { BusinessReviewService } from "../services/business-review-service";
 import { useAuthData } from '../utils/auth-utils';
 import { isMobilePlatform } from "../utils/platform-detection";
 import { stripHiveImageProxy } from "../utils/image-url";
+import { useAuthStore } from "hive-authentication";
 
 export function ReviewScreen() {
   const navigate = useNavigate();
   const location = useLocation();
   const { aioha } = useAioha();
+  const haAuthStore = useAuthStore();
 
   // Pull data from history state
   const photos: string[] = location.state?.photos || [];
@@ -134,7 +136,8 @@ export function ReviewScreen() {
     }
 
     setIsSubmitting(true);
-
+    await haAuthStore.switchToPostingForCurrentUser();
+    await new Promise(resolve => setTimeout(resolve, 300));
     const permlink = generateRandomString(8);
     const parentAuthor = "";
     const parentPermlink = "hive-106130";

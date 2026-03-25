@@ -3,7 +3,7 @@
 import { useRef, useState } from "react";
 import { Card } from "@radix-ui/themes";
 import { ImageIcon, Loader2, X } from "lucide-react";
-import { useAioha } from "@aioha/react-provider";
+import { useAioha } from "@aioha/react-ui";
 import type { BusinessModel } from "../../../types/business";
 import { useAuthData } from "../../../utils/auth-utils";
 import { ApiService } from "../../../services/api";

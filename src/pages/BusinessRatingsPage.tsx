@@ -3,7 +3,7 @@ import { useParams, useNavigate } from "react-router-dom";
 import { ArrowLeft, Star, Verified, AlertTriangle, EyeOff } from "lucide-react";
 import { format } from "timeago.js";
 import { useBusinesses } from "../hooks/useBusinesses";
-import { useAioha } from "@aioha/react-provider";
+import { useAioha } from "@aioha/react-ui";
 import { useAuthData } from "../utils/auth-utils";
 import { BusinessRatingSummaryService } from "../services/business-rating-summary-service";
 import { useBusinessRatingsStore } from "../stores/businessRatingsStore";

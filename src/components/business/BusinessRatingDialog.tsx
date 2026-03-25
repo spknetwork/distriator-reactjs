@@ -1,7 +1,7 @@
 import { useState } from "react";
 import { Star } from "lucide-react";
 import { toast } from "sonner";
-import { useAioha } from "@aioha/react-provider";
+import { useAioha } from "@aioha/react-ui";
 import { BusinessRatingService } from "../../services/business-rating-service";
 import { BusinessRatingSummaryService } from "../../services/business-rating-summary-service";
 import { useAuthData } from "../../utils/auth-utils";

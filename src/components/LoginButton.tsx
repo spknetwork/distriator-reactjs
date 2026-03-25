@@ -1,6 +1,6 @@
 import React, { useMemo } from "react";
 import "hive-authentication/build.css";
-import { useAioha } from "@aioha/react-provider";
+import { useAioha } from "@aioha/react-ui";
 import { AuthButton } from 'hive-authentication';
 const HD_API_SERVER = import.meta.env.VITE_HD_API_SERVER || 'https://beta-api.distriator.com';
 import type { HiveAuthUser } from "../context/AuthContext";

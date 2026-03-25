@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useState, useCallback, useEffect, useRef } from "react";
-import { useAioha } from "@aioha/react-provider";
+import { useAioha } from "@aioha/react-ui";
 import { useAuthData } from "../../utils/auth-utils";
 import CommonLayout from "../../components/CommonLayout";
 import {
