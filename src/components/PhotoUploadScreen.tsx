@@ -281,16 +281,12 @@ export function PhotoUploadScreen() {
               capture={allowGallery ? undefined : "environment" }
               onChange={handleFileChange}
             />
-            <div
-              className="cursor-pointer"
+            <Button
               onClick={openCameraOrPicker}
+              className="cursor-pointer bg-success text-primary-foreground px-4 py-2 rounded-lg shadow-md hover:bg-success/90 transition-colors"
             >
-              <div className="flex items-center justify-center space-x-2 bg-success text-primary-foreground px-4 py-2 rounded-lg shadow-md hover:bg-success/90 transition-colors">
-                <Button asChild>
-                  <span>{allowGallery ? "Choose Photos" : "Open Camera"}</span>
-                </Button>
-              </div>
-            </div>
+              {allowGallery ? "Choose Photos" : "Open Camera"}
+            </Button>
           </div>
         </Card>
 
