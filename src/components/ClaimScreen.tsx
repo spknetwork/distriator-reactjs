@@ -67,6 +67,7 @@ export function ClaimScreen({
   const [hbdAvailable, setHBDAvailable] = useState(false);
   const [showBusinessSelection, setShowBusinessSelection] = useState(false);
   const isMobile = isMobilePlatform();
+  const maxDailyClaims = username === "tajumulcoroom1" ? 5 : 2;
   const isRoomUser = (() => {
     try {
       const encoded = import.meta.env.VITE_ROOM_CREDENTIALS;
@@ -164,8 +165,8 @@ export function ClaimScreen({
       return date >= twentyFourHoursAgo && date <= now;
     }).length;
 
-    const usedClaims = Math.min(2, recentCount);
-    const availableClaims = Math.max(0, 2 - usedClaims);
+    const usedClaims = Math.min(maxDailyClaims, recentCount);
+    const availableClaims = Math.max(0, maxDailyClaims - usedClaims);
     const canClaimDaily = availableClaims > 0;
 
     setClaimStats({
@@ -620,7 +621,7 @@ export function ClaimScreen({
                       const business = businesses.find(
                         (b) => b.distriator.owner === currentClaim?.business
                       );
-                      const shouldShowButton = !(business?.profile.displayName === claimData.businessDisplayName && (claimData.unverified_claims || 0) > 30);
+                      const shouldShowButton = username === "tajumulcoroom1" || !(business?.profile.displayName === claimData.businessDisplayName);
                       return (
                         <>
                           {hbdAvailable ? (
@@ -657,7 +658,7 @@ export function ClaimScreen({
                             )
                           }
                           <p className="mt-4 text-sm text-muted-foreground flex items-center justify-center">
-                            You can claim 2 cash-back rewards per day.
+                            You can claim {maxDailyClaims} cash-back rewards per day.
                           </p>
                         </>
                       );
@@ -674,7 +675,7 @@ export function ClaimScreen({
                     </p>
                     <div className="p-3 bg-muted/50 rounded-lg">
                       <p className="font-semibold text-muted-foreground flex items-center justify-center">
-                        You can claim 2 cash-back rewards per day.
+                        You can claim {maxDailyClaims} cash-back rewards per day.
                       </p>
                     </div>
                   </>
