@@ -148,9 +148,10 @@ export function PhotoUploadScreen() {
       return;
     }
 
-    const allowed = await checkCameraPermission();
-    if (!allowed) return;
+    // Must call .click() synchronously within the user gesture — any await
+    // before this point causes Safari to silently ignore the click.
     fileInputRef.current?.click();
+    checkCameraPermission();
   };
 
   const checkCameraPermission = async (): Promise<boolean> => {
