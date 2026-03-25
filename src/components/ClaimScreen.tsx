@@ -20,10 +20,10 @@ import relativeTime from "dayjs/plugin/relativeTime";
 import CommonLayout from "./CommonLayout";
 import { ClaimLevels } from "./ClaimLevels";
 import { useAioha } from "@aioha/react-ui";
+import { useAuthStore } from "hive-authentication";
 import { parseSocialUrl } from "../utils/social-url-parser";
 import { DhiveService } from "../services/dhive-service";
 import { BusinessSelectionDialog } from "./business/BusinessSelectionDialog";
-import { isMobilePlatform } from "../utils/platform-detection";
 import { stripHiveImageProxy } from "../utils/image-url";
 
 dayjs.extend(relativeTime);
@@ -62,11 +62,11 @@ export function ClaimScreen({
   const [showConfetti, setShowConfetti] = useState(false);
   const [isCommentingOnSocial, setIsCommentingOnSocial] = useState(false);
   const { aioha } = useAioha();
+  const { currentUser: authUser } = useAuthStore();
   let hivePostPermlink = "";
   const currentClaim = claimData?.claim;
   const [hbdAvailable, setHBDAvailable] = useState(false);
   const [showBusinessSelection, setShowBusinessSelection] = useState(false);
-  const isMobile = isMobilePlatform();
   const isRoomUser = (() => {
     try {
       const encoded = import.meta.env.VITE_ROOM_CREDENTIALS;
@@ -844,7 +844,7 @@ export function ClaimScreen({
                       </span>
                     </div>
                   )}
-                  {isSubmitting && (
+                  {isSubmitting && !authUser?.privatePostingKey && (
                     <div className="text-center text-blink-yellow">
                       Go to keychain & approve the request
                     </div>

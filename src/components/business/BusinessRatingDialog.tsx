@@ -7,6 +7,7 @@ import { BusinessRatingSummaryService } from "../../services/business-rating-sum
 import { useAuthData } from "../../utils/auth-utils";
 import type { BusinessModel } from "../../types/business";
 import type { BusinessRatingSummaryResponse } from "../../types/business-rating";
+import { useAuthStore } from "hive-authentication";
 
 interface BusinessRatingDialogProps {
   isOpen: boolean;
@@ -53,7 +54,7 @@ export const BusinessRatingDialog = ({
 
   const { token, username, isWeb2User, isAuthenticated } = useAuthData();
   const { aioha, user } = useAioha();
-  const isMobile = /android|iphone|ipad|ipod/i.test(navigator.userAgent);
+    const { currentUser: authUser } = useAuthStore();
 
   const handleStarClick = (starIndex: number) => {
     setRating(starIndex + 1);
@@ -329,7 +330,7 @@ export const BusinessRatingDialog = ({
               </span>
             </div>
           )}
-          {isMobile && isSubmitting && !isWeb2User && (
+          {isSubmitting && !isWeb2User && !authUser?.privatePostingKey && (
             <div className="text-center text-blink-yellow">
               Go to keychain & approve the request
             </div>
