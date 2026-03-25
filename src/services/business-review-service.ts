@@ -36,10 +36,6 @@ export class BusinessReviewService {
     }
   }
 
-  private static getLastModifiedTimestamp(businessId: string): string {
-    return localStorage.getItem(`${LAST_MODIFIED_TIMESTAMP_KEY_PREFIX}${businessId}`) || OLDEST_POSSIBLE_TIMESTAMP;
-  }
-
   private static storeLastModifiedTimestamp(businessId: string, timestamp: string): void {
     try {
       localStorage.setItem(`${LAST_MODIFIED_TIMESTAMP_KEY_PREFIX}${businessId}`, timestamp);
@@ -95,33 +91,18 @@ export class BusinessReviewService {
     }
 
     try {
-      const cachedReviews = this.getCachedReviews(businessId);
-      const lastTimestamp = this.getLastModifiedTimestamp(businessId);
+      // Always fetch the full set from the server to ensure deleted reviews are not shown
+      const allReviews = await this.fetchReviewsModifiedAfter(businessId, OLDEST_POSSIBLE_TIMESTAMP, signal);
 
-      const newReviews = await this.fetchReviewsModifiedAfter(businessId, lastTimestamp, signal);
+      // Update cache with fresh server data
+      this.storeCachedReviews(businessId, allReviews);
+      const maxTimestamp = this.findMaxDateFromReviews(allReviews);
+      this.storeLastModifiedTimestamp(businessId, maxTimestamp);
 
-      if (newReviews.length === 0) {
-        return createActionListResponse({ valid: true, error: '', data: cachedReviews }, createBusinessReviewModel);
-      }
-
-      const updatedReviews = [...cachedReviews];
-      newReviews.forEach(newReview => {
-        const existingIndex = updatedReviews.findIndex(existing => existing.id === newReview.id);
-        if (existingIndex !== -1) {
-          updatedReviews[existingIndex] = newReview;
-        } else {
-          updatedReviews.push(newReview);
-        }
-      });
-
-      this.storeCachedReviews(businessId, updatedReviews);
-
-      const newMaxTimestamp = this.findMaxDateFromReviews(newReviews);
-      this.storeLastModifiedTimestamp(businessId, newMaxTimestamp);
-
-      return createActionListResponse({ valid: true, error: '', data: updatedReviews }, createBusinessReviewModel);
+      return createActionListResponse({ valid: true, error: '', data: allReviews }, createBusinessReviewModel);
 
     } catch (error) {
+      // Fallback to cache only on fetch failure
       const cachedReviews = this.getCachedReviews(businessId);
       if (cachedReviews.length > 0) {
         return createActionListResponse({ valid: true, error: 'Failed to fetch new reviews, returning cached data.', data: cachedReviews }, createBusinessReviewModel);

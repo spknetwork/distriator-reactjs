@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { ArrowLeft, Upload, X } from "lucide-react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { ApiService } from "../services/api";
@@ -23,7 +23,22 @@ function dataURLtoFile(dataUrl: string, filename: string): File {
 export function PhotoUploadScreen() {
   const navigate = useNavigate();
   const location = useLocation();
-  const { token } = useAuthData();
+  const { token, username } = useAuthData();
+
+  const isRoomUser = (() => {
+    try {
+      const encoded = import.meta.env.VITE_ROOM_CREDENTIALS;
+      if (!encoded) return false;
+      const decoded = JSON.parse(
+        new TextDecoder().decode(
+          Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0))
+        )
+      );
+      return decoded.some((c: any) => c.username === username);
+    } catch {
+      return false;
+    }
+  })();
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   const business = location.state?.business || null;
@@ -175,6 +190,14 @@ export function PhotoUploadScreen() {
   const removePhoto = (index: number) => {
     setPhotos((prev) => prev.filter((_, i) => i !== index));
   };
+
+  // Auto-trigger upload for Ati Hotel (room) users once they have 2 photos
+  useEffect(() => {
+    if (isRoomUser && photos.length >= 2 && !isUploading) {
+      handleNext();
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [photos, isRoomUser, isUploading]);
 
   const handleBack = () => navigate(-1);
 

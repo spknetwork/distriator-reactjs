@@ -9,7 +9,6 @@ import type { UserClaimResponseDTO } from "../types/claim";
 import type { BusinessModel, ReviewField } from "../types/business";
 import { BusinessReviewService } from "../services/business-review-service";
 import { useAuthData } from '../utils/auth-utils';
-import { isMobilePlatform } from "../utils/platform-detection";
 import { stripHiveImageProxy } from "../utils/image-url";
 import { useAuthStore } from "hive-authentication";
 
@@ -36,7 +35,7 @@ export function ReviewScreen() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isClaiming, setIsClaiming] = useState(false);
   const [showConfetti, setShowConfetti] = useState(false);
-  const { token, username } = useAuthData();
+  const { token, username, currentUser: authUser } = useAuthData();
 
   // Questions state
   const [fields, setFields] = useState<ReviewField[]>(passedFields || []);
@@ -51,7 +50,6 @@ export function ReviewScreen() {
   const [serverDisplayName, setServerDisplayName] = useState("");
   const [serverRating, setServerRating] = useState<number>(0);
   const [serverQuestionCompleted, setServerQuestionCompleted] = useState<boolean>(!requiresServerQuestion);
-  const isMobile = isMobilePlatform();
   // If not passed, fetch once
   useEffect(() => {
     if (!passedFields && business?.id) {
@@ -327,7 +325,7 @@ To benefit from Distriator and receive discounts on your Hive Dollars purchases:
           <div className="flex items-center gap-3 bg-background/90 text-foreground px-5 py-4 rounded-lg shadow-xl border border-border">
             <Loader2 className="w-5 h-5 animate-spin" />
             <span>
-              {isClaiming ? "Submitting business review... Please wait" : "Go to keychain & approve the request to submit business review"}
+              {isClaiming ? "Submitting business review... Please wait" : !authUser?.privatePostingKey ? "Go to keychain & approve the request to submit business review" : "Posting business review... Please wait"}
             </span>
           </div>
         </div>
@@ -447,7 +445,7 @@ To benefit from Distriator and receive discounts on your Hive Dollars purchases:
               <button
                 onClick={() => {
                   setShowConfetti(false);
-                  navigate("/claim");
+                  navigate("/cashback-status");
                 }}
                 className="mt-6 px-6 py-2 bg-primary text-white rounded-lg hover:bg-primary/90 transition-colors"
               >
@@ -737,7 +735,7 @@ To benefit from Distriator and receive discounts on your Hive Dollars purchases:
               ? "Posting business review..."
               : "Submit Review"}
         </button>
-        {isSubmitting && (
+        {isSubmitting && !authUser?.privatePostingKey && (
           <div className="text-center text-blink-yellow mt-2">
             Go to keychain & approve the request to submit business review
           </div>
