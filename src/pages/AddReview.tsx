@@ -23,6 +23,12 @@ export default function AddReviewPage() {
   const hasQuestions = fields.length > 0;
   const characterCount = useMemo(() => reviewText.trim().length, [reviewText]);
 
+  const allTextFieldsValid = useMemo(() => {
+    const textFields = fields.filter((f) => f.type === "text");
+    if (textFields.length === 0) return true;
+    return textFields.every((f) => String(answers[f.id] || "").trim().length >= 20);
+  }, [fields, answers]);
+
   useEffect(() => {
     if (!business?.id) return;
     let cancelled = false;
@@ -176,6 +182,29 @@ export default function AddReviewPage() {
       );
     }
 
+    if (field.type === "text") {
+      const current = String(answers[field.id] || "");
+      const count = current.trim().length;
+      const remaining = Math.max(0, 20 - count);
+      const ok = remaining === 0;
+      return (
+        <div className="space-y-2">
+          <textarea
+            value={current}
+            onChange={(e) => setAnswer(field.id, e.target.value)}
+            placeholder="Write your answer here..."
+            className="w-full min-h-[100px] rounded-md border border-border bg-background p-3 outline-none focus:ring-2 focus:ring-primary resize-none"
+          />
+          <div className="flex items-center justify-between text-xs text-muted-foreground">
+            <span>Minimum 20 characters required</span>
+            <span className={ok ? "text-green-500" : "text-red-500"}>
+              {count}/20
+            </span>
+          </div>
+        </div>
+      );
+    }
+
     return null;
   };
 
@@ -312,7 +341,8 @@ export default function AddReviewPage() {
         <div className="pt-2">
           <button
             type="button"
-            className="w-full px-4 py-3 rounded-md bg-primary text-primary-foreground"
+            disabled={!allTextFieldsValid}
+            className="w-full px-4 py-3 rounded-md bg-primary text-primary-foreground disabled:opacity-50 disabled:cursor-not-allowed"
             onClick={() => {
               // No action for now; integration will be added later
               toast.info("Submit action will be integrated later");
