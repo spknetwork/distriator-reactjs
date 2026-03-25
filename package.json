@@ -1,7 +1,7 @@
 {
   "name": "distriator",
   "private": true,
-  "version": "0.0.103",
+  "version": "0.0.104",
   "type": "module",
   "scripts": {
     "dev": "vite --host",
@@ -77,6 +77,6 @@
   },
   "deployment": {
     "branch": "public-production",
-    "commitHash": "fdb3d67"
+    "commitHash": "683127d"
   }
 }
