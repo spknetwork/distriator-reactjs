@@ -876,7 +876,7 @@ export function ClaimScreen({
                           onClick={handleAddReview}
                           className="btn btn-primary w-full flex flex-col items-center gap-0.5 py-3 h-16 "
                         >
-                          <span>Write Detailed Review</span>
+                          <span>{isRoomUser ? "Write a review of your experience" : "Write Detailed Review"}</span>
                           <span className="text-xs font-medium opacity-90 animate-blink">Earn more Crypto</span>
                         </button>
                         <button
