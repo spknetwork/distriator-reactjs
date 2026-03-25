@@ -621,7 +621,7 @@ export function ClaimScreen({
                       const business = businesses.find(
                         (b) => b.distriator.owner === currentClaim?.business
                       );
-                      const shouldShowButton = username === "tajumulcoroom1" || !(business?.profile.displayName === claimData.businessDisplayName);
+                      const shouldShowButton = !(business?.profile.displayName === claimData.businessDisplayName && (claimData.unverified_claims || 0) > 30);
                       return (
                         <>
                           {hbdAvailable ? (
