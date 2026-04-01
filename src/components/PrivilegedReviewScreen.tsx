@@ -8,7 +8,7 @@ import { toast } from "sonner";
 import { ApiService } from "../services/api";
 import Confetti from "react-confetti";
 
-const MIN_TEXT_LENGTH = 20;
+const MIN_TEXT_LENGTH = 30;
 
 export function PrivilegedReviewScreen() {
   const navigate = useNavigate();
