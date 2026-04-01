@@ -58,6 +58,7 @@ import SalesViewPage from "./pages/SalesView";
 import SalesDetailViewPage from "./pages/SalesDetailView";
 import SalesSelectPage from "./pages/SalesSelect";
 import Privacy from "./pages/Privacy";
+import { PrivilegedReviewScreen } from "./components/PrivilegedReviewScreen";
 
 // Set encryption key at startup so the auth store can decrypt persisted users on any page
 useAuthStore.getState().setSecretKey(import.meta.env.VITE_LOCAL_KEY || '');
@@ -100,6 +101,7 @@ const App = () => {
               <Route path="/claim" element={<Dashboard />} />
               <Route path="/photo-upload" element={<PhotoUploadScreen />} />
               <Route path="/review" element={<ReviewScreen />} />
+              <Route path="/privileged-review" element={<PrivilegedReviewScreen />} />
               <Route path="/addreview" element={<AddReviewPage />} />
               <Route path="/atihotel/:roomname" element={<AutoLogin />} />
               <Route

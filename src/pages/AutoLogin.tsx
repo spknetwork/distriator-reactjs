@@ -1,24 +1,22 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { useEffect, useState, useRef } from "react";
 import { useNavigate, useParams } from "react-router-dom";
-import { useAioha } from "@aioha/react-ui";
-import { useProgrammaticAuth, useAuthStore } from "hive-authentication";
+import { useAuthStore } from "hive-authentication";
+import CryptoJS from "crypto-js";
+
 const HD_API_SERVER = import.meta.env.VITE_HD_API_SERVER || 'https://beta-api.distriator.com';
 
 export default function AutoLogin() {
   const { roomname } = useParams();
   const navigate = useNavigate();
   const [status, setStatus] = useState("Initializing login...");
-  const { aioha } = useAioha();
-  const { loginWithPrivateKey } = useProgrammaticAuth(aioha);
-  const { setSecretKey, setAioha } = useAuthStore();
+  const { setSecretKey, setCurrentUser, addLoggedInUser } = useAuthStore();
   const hasRun = useRef(false);
 
   useEffect(() => {
     const encryptionKey = import.meta.env.VITE_LOCAL_KEY || "";
     setSecretKey(encryptionKey);
-    setAioha(aioha);
-  }, [aioha, setSecretKey, setAioha]);
+  }, [setSecretKey]);
 
   useEffect(() => {
     if (hasRun.current) return;
@@ -33,41 +31,55 @@ export default function AutoLogin() {
         const encoded = import.meta.env.VITE_ROOM_CREDENTIALS;
         if (!encoded) throw new Error("ROOM_CREDENTIALS not set");
 
-        const decoded = JSON.parse(
+        const decoded: string[] = JSON.parse(
           new TextDecoder().decode(
             Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0))
           )
         );
 
-        const roomCred = decoded.find((c: any) => c.roomname === roomname);
-        if (!roomCred) throw new Error(`No credentials found for ${roomname}`);
-
-        const { username, key } = roomCred;
-        if (!username || !key) throw new Error("Invalid credentials");
+        const username = decoded.find((u: string) => u === roomname);
+        if (!username) throw new Error(`No credentials found for ${roomname}`);
 
         setStatus(`Logging in ${username}...`);
-        await loginWithPrivateKey(
+
+        const decryptionKey = import.meta.env.VITE_DECRYPTION_KEY;
+        if (!decryptionKey) throw new Error("DECRYPTION_KEY not set");
+
+        const timestamp = new Date().toISOString();
+        const encryptedTimestamp = CryptoJS.AES.encrypt(timestamp, decryptionKey).toString();
+        const encryptedUsername = CryptoJS.AES.encrypt(username, decryptionKey).toString();
+
+        setStatus("Please wait, connecting to server...");
+        const response = await fetch(`${HD_API_SERVER}/privileged-login`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            timestamp,
+            encryptedTimestamp,
+            encryptedUsername,
+          }),
+        });
+
+        if (!response.ok) {
+          throw new Error("Server authentication failed");
+        }
+
+        const data = await response.json();
+
+        const user = {
           username,
-          key,
-          async (hiveResult: any) => {
-            setStatus("Please wait, connecting to server...");
-            const response = await fetch(`${HD_API_SERVER}/login`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                challenge: hiveResult.challenge,
-                proof: hiveResult.proof,
-                pubkey: hiveResult.publicKey,
-                username: hiveResult.username,
-              }),
-            });
-            if (!response.ok) {
-              throw new Error("Server authentication failed");
-            }
-            const data = await response.json();
-            return JSON.stringify(data);
-          }
-        );
+          provider: "privileged",
+          challenge: "",
+          publicKey: "",
+          proof: timestamp,
+          serverResponse: JSON.stringify(data),
+          loginType: "hive" as const,
+        };
+
+        addLoggedInUser(user);
+        setCurrentUser(user);
+
+        setStatus("Login successful! Redirecting...");
         setTimeout(() => navigate("/claim"), 800);
       } catch (err: any) {
         console.error(err);
@@ -77,7 +89,7 @@ export default function AutoLogin() {
     };
 
     doAutoLogin();
-  }, [roomname, navigate, loginWithPrivateKey]);
+  }, [roomname, navigate, setCurrentUser, addLoggedInUser]);
 
   return (
     <div className="flex flex-col items-center justify-center h-screen text-center">

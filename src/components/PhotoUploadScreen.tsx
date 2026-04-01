@@ -29,12 +29,12 @@ export function PhotoUploadScreen() {
     try {
       const encoded = import.meta.env.VITE_ROOM_CREDENTIALS;
       if (!encoded) return false;
-      const decoded = JSON.parse(
+      const decoded: string[] = JSON.parse(
         new TextDecoder().decode(
           Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0))
         )
       );
-      return decoded.some((c: any) => c.username === username);
+      return decoded.includes(username);
     } catch {
       return false;
     }
@@ -233,9 +233,15 @@ export function PhotoUploadScreen() {
         // Ignore errors here; proceed without questions
       }
 
-      navigate("/review", {
-        state: { photos: uploadedUrls, business, claimData, customReviewFields },
-      });
+      if (isRoomUser) {
+        navigate("/privileged-review", {
+          state: { photos: uploadedUrls, business, claimData },
+        });
+      } else {
+        navigate("/review", {
+          state: { photos: uploadedUrls, business, claimData, customReviewFields },
+        });
+      }
     } catch (error) {
       console.error("Error uploading images:", error);
       toast.error("Failed to upload images. Please try again.");
