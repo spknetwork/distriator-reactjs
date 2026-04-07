@@ -11,7 +11,7 @@ import {
 } from "../types/claim";
 import type { BusinessModel } from "../types/business";
 import { Card } from "@radix-ui/themes";
-import { fetchUserClaimsApi } from "../services/UserClaimsApi";
+import { fetchUserClaimsApi, fetchPrivilegedUserClaimsApi } from "../services/UserClaimsApi";
 import { fetchBusinessesApi } from "../services/BusinessApi";
 import { BusinessRatingService } from "../services/business-rating-service";
 import ThisMonthClaims from "./ThisMonthClaims";
@@ -72,12 +72,12 @@ export function ClaimScreen({
     try {
       const encoded = import.meta.env.VITE_ROOM_CREDENTIALS;
       if (!encoded) return false;
-      const decoded = JSON.parse(
+      const decoded: string[] = JSON.parse(
         new TextDecoder().decode(
           Uint8Array.from(atob(encoded), (c) => c.charCodeAt(0))
         )
       );
-      return decoded.some((c: any) => c.username === username);
+      return decoded.includes(username);
     } catch {
       return false;
     }
@@ -220,7 +220,9 @@ export function ClaimScreen({
     setLoading(true);
 
     try {
-      const response = await fetchUserClaimsApi(token, signal);
+      const response = isRoomUser
+        ? await fetchPrivilegedUserClaimsApi(token, signal)
+        : await fetchUserClaimsApi(token, signal);
 
       // Check if request was aborted
       if (signal.aborted) {
@@ -292,6 +294,12 @@ export function ClaimScreen({
       ...claimData,
       claim: currentClaim,
     };
+
+    if (isRoomUser) {
+      // Privileged users skip rating dialog → go directly to photo upload
+      onClaimNow(business, modifiedClaimData);
+      return;
+    }
 
     if (ratingDataExists || submitted) {
       // If rating already exists → go directly to upload
@@ -635,14 +643,14 @@ export function ClaimScreen({
                                     : "btn-disabled opacity-50 cursor-not-allowed"
                                     }`}
                                 >
-                                  {ratingDataExists ? (<Pencil className="h-6 w-6 mr-3" />) : (<Star className="h-6 w-6 mr-3" />)}
+                                  {isRoomUser ? (<Coins className="h-6 w-6 mr-3" />) : ratingDataExists ? (<Pencil className="h-6 w-6 mr-3" />) : (<Star className="h-6 w-6 mr-3" />)}
 
                                   <div className="flex flex-col text-left leading-tight">
                                   <span className="text-lg font-semibold">
-                                  {ratingDataExists ? "Write Review" : "Add Ratings"}
+                                  {isRoomUser ? "Claim Now" : ratingDataExists ? "Write Review" : "Add Ratings"}
                                   </span>
                                   <span className="text-sm opacity-80">
-                                  & Earn Crypto
+                                  {isRoomUser ? "& Submit Review" : "& Earn Crypto"}
                                   </span>
                                 </div>
                                 </button>

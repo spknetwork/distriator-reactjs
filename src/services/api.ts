@@ -419,6 +419,41 @@ export class ApiService {
     }
   }
 
+  static async submitPrivilegedReview(
+    token: string,
+    claim: any,
+    review: { rating: number; liked: string; improvement: string; experience: string; images: string[] }
+  ): Promise<{ success: boolean; message?: string; data?: any }> {
+    const response = await fetch(
+      `${HD_API_SERVER}/claims/v2/reward-privileged`,
+      {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: token,
+        },
+        body: JSON.stringify({ claim, review }),
+      }
+    );
+
+    const isTokenExpired = await handleTokenExpiration(response);
+    if (isTokenExpired) {
+      throw new Error('Token expired');
+    }
+
+    const result = await response.json();
+
+    if (response.ok) {
+      return {
+        success: result.success || false,
+        message: result.message,
+        data: result.data,
+      };
+    } else {
+      throw new Error(result.error || result.message || 'Failed to submit privileged review');
+    }
+  }
+
   static async getCashbackLogs(
     token: string,
     page: number = 1,
