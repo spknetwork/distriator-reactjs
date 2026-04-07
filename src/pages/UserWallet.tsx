@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Wallet } from "hive-authentication";
+import { Wallet } from "hive-react-kit";
 import { useAuthData } from "../utils/auth-utils";
 import Header from "../components/Header";
 
@@ -30,7 +30,9 @@ export default function UserWallet() {
     return (
         <div className="min-h-screen bg-background">
             {/* Header */}
-            <Header title={"Wallet"} isDrawerMenuRequired={false} />
+            <div className="sticky top-0 z-50">
+                <Header title={"Wallet"} isDrawerMenuRequired={false} />
+            </div>
             {/* Wallet Content */}
             {username ? (
                 <Wallet username={username} />

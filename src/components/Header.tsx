@@ -27,7 +27,7 @@ export function Header({
                             <Menu className="w-6 h-6 text-foreground" />
                         </button>
                         : <button
-                            onClick={() => navigate("/")}
+                            onClick={() => { window.scrollTo(0, 0); navigate(-1); }}
                             className="p-2 bg-muted text-foreground rounded-full hover:bg-muted-foreground/20 cursor-pointer px-4"
                         >
                             <ArrowLeft className="w-4 h-4" />

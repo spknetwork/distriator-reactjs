@@ -1,6 +1,7 @@
 @import "tailwindcss";
 @plugin "daisyui";
 @import "hive-authentication/build.css";
+@import "hive-react-kit/build.css";
 @import "@radix-ui/themes/styles.css";
 
 @layer base {
